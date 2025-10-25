@@ -1,9 +1,8 @@
-version: '3.8'
-
 services:
   # Laravel Backend
   backend:
     build: ./backend
+    container_name: auditnet_backend
     ports:
       - "8000:8000"
     volumes:
@@ -11,51 +10,50 @@ services:
       - ./backend/storage:/var/www/storage
     environment:
       - DB_HOST=db
-      - DB_DATABASE=laravel
-      - DB_USERNAME=user
+      - DB_DATABASE=auditnet
+      - DB_USERNAME=auditnet_user
       - DB_PASSWORD=password
     depends_on:
       - db
-    # Для разработки можно запустить встроенный сервер
     command: php artisan serve --host=0.0.0.0 --port=8000
 
   # Vue Frontend
   frontend:
-    build: ./frontend
-    ports:
-      - "5173:5173"
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: auditnet_frontend
     volumes:
       - ./frontend:/app
-      - /app/node_modules  # Чтобы node_modules не перезаписывались
+      - /app/node_modules
+      - /app/dist
+    ports:
+      - "5173:5173"
     environment:
       - VITE_API_URL=http://localhost:8000/api
-    depends_on:
-      - backend
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    stdin_open: true
+    tty: true
 
-  # Express.js Telegram Bot
-  #telegram-bot:
-   # build: ./tg-bot
-    #ports:
-     # - "3000:3000"
-    #environment:
-     # - TELEGRAM_BOT_TOKEN=your_bot_token_here
-      #- API_URL=http://backend:8000/api
-      #- NODE_ENV=production
-    #depends_on:
-     # - backend
-
-  # База данных
+  # База данных MariaDB 11.8
   db:
-    image: mysql:8.0
+    image: mariadb:11.8.3
+    container_name: auditnet_db
     environment:
-      MYSQL_DATABASE: laravel
-      MYSQL_USER: user
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: auditnet
+      MYSQL_USER: auditnet_user
       MYSQL_PASSWORD: password
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_HOST: '%'
     ports:
       - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mariadb_data:/var/lib/mysql
+    command: 
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --innodb-buffer-pool-size=1G
 
 volumes:
-  mysql_data:
+  mariadb_data:
