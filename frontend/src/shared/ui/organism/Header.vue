@@ -22,7 +22,7 @@
             <polyline points="2 17 12 22 22 17"></polyline>
             <polyline points="2 12 12 17 22 12"></polyline>
           </svg>
-          <span class="logo-text">MyApp</span>
+          <span class="logo-text">AuditNet</span>
         </div>
         <button class="toggle-btn" @click="toggleSidebar">
           <svg
