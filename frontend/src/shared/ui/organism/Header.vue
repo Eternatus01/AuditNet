@@ -22,7 +22,7 @@
             <polyline points="2 17 12 22 22 17"></polyline>
             <polyline points="2 12 12 17 22 12"></polyline>
           </svg>
-          <span class="logo-text">AuditNet</span>
+          <span class="logo-text">AuditNet {{ name }}</span>
         </div>
         <button class="toggle-btn" @click="toggleSidebar">
           <svg
@@ -59,7 +59,7 @@
       <!-- Меню -->
       <nav class="nav-list">
         <!-- Группа для НЕ авторизованного пользователя -->
-        <template v-if="!isLoggedIn">
+        <template v-if="!isLogged">
           <div class="nav-item">
             <a
               href="#"
@@ -115,11 +115,67 @@
             </a>
           </div>
         </template>
+
+        <!-- Группа для авторизованного пользователя -->
+        <template v-if="isLogged">
+          <div class="nav-item">
+            <a
+              href="#"
+              class="nav-link"
+              :class="{ active: route.name === 'dashboard' }"
+              @click.prevent="$router.push({ name: 'dashboard' })"
+            >
+              <div class="nav-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="14" width="7" height="7"></rect>
+                  <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+              </div>
+              <span class="link-text">Dashboard</span>
+            </a>
+          </div>
+          <div class="nav-item">
+            <a
+              href="#"
+              class="nav-link"
+              :class="{ active: route.name === 'profile' }"
+              @click.prevent="$router.push({ name: 'profile' })"
+            >
+              <div class="nav-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+              <span class="link-text">Профиль</span>
+            </a>
+          </div>
+        </template>
       </nav>
 
-      <div class="sidebar-footer" v-if="isLoggedIn">
+      <div class="sidebar-footer" v-if="isLogged">
         <div class="nav-item">
-          <a href="#" class="nav-link" @click.prevent="toggleAuth">
+          <a href="#" class="nav-link" @click.prevent="signOut">
             <div class="nav-icon">
               <svg
                 style="color: #ff6b6b"
@@ -146,18 +202,23 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { useAuthStore } from "@/features/auth/stores/auth";
 
 const router = useRouter();
 const route = useRoute();
-
+const authStore = useAuthStore();
+const name = computed(() => authStore.user?.name);
+const isLogged = computed(() => authStore.isAuthenticated)
 const isCollapsed = ref(false);
-
-const isLoggedIn = ref(false);
 
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value;
+};
+
+const signOut = async () => {
+  await authStore.logout();
 };
 </script>
 
