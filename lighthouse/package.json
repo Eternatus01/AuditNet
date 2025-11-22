@@ -1,0 +1,9 @@
+{
+  "name": "lighthouse-service",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "chrome-launcher": "^1.2.1",
+    "lighthouse": "^12.8.2"
+  }
+}

@@ -10,7 +10,7 @@ const BASE_URL =
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
-  timeout: 15_000,
+  timeout: 150_000,
   headers: {
     Accept: "application/json",
   },

@@ -13,10 +13,14 @@ services:
       - DB_HOST=host.docker.internal
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      - lighthouse
+    networks:
+      - default
 
   # Vue Frontend
   frontend:
-    build: 
+    build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: auditnet_frontend
@@ -56,6 +60,19 @@ services:
       - "8080:80"
     depends_on:
       - db
+
+  lighthouse:
+    build:
+      context: ./lighthouse
+      dockerfile: Dockerfile
+    container_name: auditnet_lighthouse
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./lighthouse:/app
+      - /app/node_modules
+    networks:
+      - default
 
 volumes:
   db_data:
