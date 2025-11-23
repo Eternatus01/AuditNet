@@ -5,17 +5,25 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AuditRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;  
+use Illuminate\Support\Facades\Auth;
+use App\Services\AuditService;
 
 class AuditController extends Controller
 {
-    public function analyze(AuditRequest $request): JsonResponse
+    public function analyze(AuditRequest $request, AuditService $auditService): JsonResponse
     {
         try {
             $url = $request->input('url');
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Пользователь не авторизован!',
+                ], 401);
+            }
 
-            $results = $this->runLighthouse($url);
+            $results = $auditService->analyzeAndStore($url, $user);
 
             return response()->json([
                 'success' => true,
@@ -26,102 +34,12 @@ class AuditController extends Controller
             Log::error('Lighthouse audit error', [
                 'message' => $e->getMessage(),
             ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Ошибка при анализе сайта. Попробуйте позже.',
                 'error' => app()->environment('local') ? $e->getMessage() : null,
             ], 500);
         }
-    }
-
-    private function runLighthouse(string $url): array
-    {
-        $lighthouseUrl = env('LIGHTHOUSE_SERVICE_URL', 'http://lighthouse:3000');
-        
-        try {
-            $response = Http::timeout(120)->post($lighthouseUrl, [
-                'url' => $url,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Ошибка соединения с Lighthouse сервисом', [
-                'lighthouse_url' => $lighthouseUrl,
-                'error' => $e->getMessage(),
-            ]);
-            throw new \Exception('Не удалось подключиться к Lighthouse сервису: ' . $e->getMessage());
-        }
-        
-        if (!$response->successful()) {
-            $error = $response->json();
-            $statusCode = $response->status();
-            Log::error('Lighthouse сервис вернул ошибку', [
-                'status' => $statusCode,
-                'error' => $error,
-            ]);
-            throw new \Exception('Lighthouse ошибка (HTTP ' . $statusCode . '): ' . ($error['error'] ?? 'Неизвестная ошибка'));
-        }
-        
-        $lighthouseData = $response->json();
-        
-        if (!$lighthouseData || isset($lighthouseData['error'])) {
-            throw new \Exception('Lighthouse ошибка: ' . ($lighthouseData['error'] ?? 'Неизвестная ошибка'));
-        }
-        
-        $categories = $lighthouseData['categories'] ?? [];
-        $audits = $lighthouseData['audits'] ?? [];
-
-        return [
-            'url' => $url,
-            
-            // Основные scores
-            'performance' => isset($categories['performance']['score']) 
-                ? (int) ($categories['performance']['score'] * 100) 
-                : null,
-            'accessibility' => isset($categories['accessibility']['score']) 
-                ? (int) ($categories['accessibility']['score'] * 100) 
-                : null,
-            'bestPractices' => isset($categories['best-practices']['score']) 
-                ? (int) ($categories['best-practices']['score'] * 100) 
-                : null,
-            'seo' => isset($categories['seo']['score']) 
-                ? (int) ($categories['seo']['score'] * 100) 
-                : null,
-            
-            // Core Web Vitals
-            'lcp' => $this->getAuditValue($audits, 'largest-contentful-paint'), // в секундах
-            'fid' => $this->getAuditValue($audits, 'first-input-delay'), // в миллисекундах
-            'cls' => $this->getAuditValue($audits, 'cumulative-layout-shift'), // число
-            
-            // Дополнительные метрики
-            'fcp' => $this->getAuditValue($audits, 'first-contentful-paint'), // в секундах
-            'tbt' => $this->getAuditValue($audits, 'total-blocking-time'), // в миллисекундах
-            'speedIndex' => $this->getAuditValue($audits, 'speed-index'), // в секундах
-            
-            'timestamp' => now()->toIso8601String(),
-        ];
-    }
-
-    /**
-     * Безопасное извлечение значения метрики из audits
-     * 
-     * @param array $audits
-     * @param string $auditId
-     * @return float|null
-     */
-    private function getAuditValue(array $audits, string $auditId): ?float
-    {
-        if (!isset($audits[$auditId]['numericValue'])) {
-            return null;
-        }
-        
-        $value = $audits[$auditId]['numericValue'];
-        
-        // Конвертируем миллисекунды в секунды для некоторых метрик
-        if (in_array($auditId, ['first-contentful-paint', 'largest-contentful-paint', 'speed-index'])) {
-            return round($value / 1000, 2); // в секундах
-        }
-        
-        return $value;
     }
 }
 
