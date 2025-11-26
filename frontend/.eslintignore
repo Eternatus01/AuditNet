@@ -1,0 +1,8 @@
+dist
+node_modules
+.vscode
+.idea
+*.config.js
+*.config.ts
+*.d.ts
+

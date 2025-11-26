@@ -1,12 +1,23 @@
-declare module '*.vue' {
-  import type { DefineComponent } from 'vue'
-  const component: DefineComponent<{}, {}, any>
-  export default component
+/// <reference types="vite/client" />
+
+declare module "*.vue" {
+  import type { DefineComponent } from "vue";
+  const component: DefineComponent<{}, {}, any>;
+  export default component;
 }
 
-// Добавь для JSX поддержки
+declare module "~icons/*" {
+  import type { DefineComponent } from "vue";
+  const component: DefineComponent<{}, {}, any>;
+  export default component;
+}
+
 declare namespace JSX {
   interface IntrinsicElements {
-    [elem: string]: any
+    [elem: string]: any;
   }
+}
+
+interface ImportMetaEnv {
+  readonly VITE_API_URL?: string;
 }

@@ -1,25 +1,21 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import { useRouter } from "vue-router";
-import { useAuthApi } from "../composable/useAuthApi";
+import { useAuthApi } from "../composables/useAuthApi";
 
 export const useAuthStore = defineStore("auth", () => {
-  const router = useRouter();
   const authApi = useAuthApi();
   const user = ref<{ id: number; name: string; email: string } | null>(null);
-  const token = ref<string>(localStorage.getItem("token") || "");
   const error = ref<string | null>(null);
-  const isAuthenticated = computed(() => !!token.value);
+  const isProfileLoading = ref(false); // Флаг загрузки профиля при инициализации
+  const isAuthenticated = computed(() => !!user.value);
 
   const signUp = async (name: string, email: string, password: string) => {
     try {
+      error.value = null;
       const response = await authApi.signUp(name, email, password);
 
-      localStorage.setItem("token", response.token);
-      token.value = response.token;
       user.value = response.user ?? null;
-      router.push({ name: "home" });
-      
+
       return response;
     } catch (e: any) {
       error.value = e.response?.data?.message || e.message || "Ошибка регистрации";
@@ -28,12 +24,10 @@ export const useAuthStore = defineStore("auth", () => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      error.value = null;
       const response = await authApi.signIn(email, password);
 
-      localStorage.setItem("token", response.token);
-      token.value = response.token;
       user.value = response.user ?? null;
-      router.push({ name: "home" });
 
       return response;
     } catch (e: any) {
@@ -43,25 +37,25 @@ export const useAuthStore = defineStore("auth", () => {
 
   const logout = async () => {
     try {
+      error.value = null;
       await authApi.logout();
-      localStorage.removeItem("token");
-      token.value = "";
       user.value = null;
-
-      router.push({ name: "login" });
     } catch (e: any) {
       error.value = e.response?.data?.message || e.message || "Ошибка выхода";
     }
   };
 
   const fetchProfile = async () => {
+    isProfileLoading.value = true;
     try {
       const response = await authApi.fetchProfile();
       user.value = response ?? null;
-
       return response;
-    } catch (e: any) {
-      error.value = e.response?.data?.message || e.message || "Ошибка получения профиля";
+    } catch {
+      user.value = null;
+      return null;
+    } finally {
+      isProfileLoading.value = false;
     }
   };
 
@@ -73,5 +67,6 @@ export const useAuthStore = defineStore("auth", () => {
     error,
     user,
     isAuthenticated,
+    isProfileLoading,
   };
 });

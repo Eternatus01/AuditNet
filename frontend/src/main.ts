@@ -9,9 +9,9 @@ const pinia = createPinia();
 
 app.use(pinia).use(router);
 
-import { useAuthStore } from "@/features/auth/stores/auth";
-
-const authStore = useAuthStore(pinia);
-authStore.fetchProfile();
-
 app.mount("#app");
+
+import { useAuthStore } from "@/features/auth/stores/auth";
+const authStore = useAuthStore();
+
+authStore.fetchProfile();

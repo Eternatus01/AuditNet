@@ -16,7 +16,8 @@ class AuthController extends Controller
 
             $user = User::create($data);
 
-            $token = $user->createToken('auth_token')->plainTextToken;
+            // Используем session-based аутентификацию вместо токенов
+            Auth::login($user);
 
             return response()->json([
                 'user'=> [
@@ -24,12 +25,11 @@ class AuthController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                 ],
-                'token' => $token,
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Ошибка регистрации. Попробуйте позже.',
-                'debug' => $e->getMessage(), // только для dev
+                'debug' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
@@ -38,16 +38,17 @@ class AuthController extends Controller
         try {
             $credentials = $request->only(['email', 'password']);
 
-            if(!Auth::attempt($credentials)){
+            // Используем session-based аутентификацию
+            if(!Auth::attempt($credentials, true)){  // true = remember me
                 return response()->json([
                     'message' => 'Неверное имя пользователя или пароль'
                 ], 401);
             }
 
-            $user = User::where('email', $request->email)->first();
-            $user->tokens()->delete();
+            $user = Auth::user();
 
-            $token = $user->createToken('auth_token')->plainTextToken;
+            // Регенерируем сессию для безопасности
+            $request->session()->regenerate();
 
             return response()->json([
                 'user' => [
@@ -55,28 +56,26 @@ class AuthController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                 ],
-                'token' => $token,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Ошибка при попытке входа. Попробуйте позднее.',
-                'debug' => $e->getMessage(), // только для dev
+                'debug' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
 
     public function logout(){
         try {
-            $user = Auth::user();
-
-            if (!$user) {
-                return response()->json([
-                    'message' => 'Пользователь не авторизован'
-                ], 401);
-            }
-
-            Auth::user()->currentAccessToken()->delete();
+            // Выходим из session
+            Auth::guard('web')->logout();
+            
+            // Инвалидируем текущую сессию
+            request()->session()->invalidate();
+            
+            // Регенерируем CSRF токен
+            request()->session()->regenerateToken();
     
             return response()->json([
                 'message' => 'Вы успешно вышли'
@@ -84,9 +83,8 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Ошибка выхода. Попробуйте позже.',
-                'debug' => $e->getMessage(), // только для dev
+                'debug' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
-        
     }
 }

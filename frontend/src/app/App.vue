@@ -1,17 +1,17 @@
 <template>
-  <div class="main-contaner">
+  <div class="main-container">
     <Header />
-    <main>
+    <main :class="{ 'with-sidebar': true, 'sidebar-collapsed': sidebarCollapsed }">
       <router-view />
     </main>
   </div>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
+import { inject, type Ref } from "vue";
 import Header from "../shared/ui/organism/Header.vue";
 
-
-export default {
-  components: { Header },
-};
+// Получаем состояние sidebar из Header
+const sidebarCollapsed = inject<Ref<boolean>>('sidebarCollapsed', { value: false } as Ref<boolean>);
 </script>
+

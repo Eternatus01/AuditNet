@@ -1,4 +1,4 @@
-import { apiClient } from "@/widgets/apiClient";
+import { apiClient } from "@/shared/utils/apiClient";
 
 interface AnalyzeWebsiteResponse {
   success: boolean;
@@ -39,11 +39,32 @@ export const useAuditApi = () => {
       if (e.response?.status === 422 && e.response.data?.errors) {
         throw new Error(Object.values(e.response.data.errors).flat().join(" "));
       }
-      throw new Error(e.response?.data?.message || e.message || "Ошибка при анализе сайта");
+      throw new Error(
+        e.response?.data?.message || e.message || "Ошибка при анализе сайта"
+      );
+    }
+  };
+
+  const fetchSecurityAudit = async (websiteUrl: string) => {
+    try {
+      const response: any = await apiClient("/audit/security-audit", {
+        method: "POST",
+        data: {
+          url: websiteUrl.trim(),
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error || "Ошибка аудита безопасности");
+      }
+      return response;
+    } catch (e: any) {
+      throw new Error(e.response?.data?.error || e.message || "Ошибка сети");
     }
   };
 
   return {
     analyzeWebsite,
+    fetchSecurityAudit,
   };
 };

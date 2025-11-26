@@ -1,16 +1,18 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
-import { useAuditApi } from "../composable/useAuditApi";
+import { ref, computed } from "vue";
+import { useAuditApi } from "../composables/useAuditApi";
 
 export const useAuditStore = defineStore("audit", () => {
   const auditApi = useAuditApi();
-  const isLoading = ref(false);
+
+  const isLighthouseLoading = ref(false);
+  const isSecurityLoading = ref(false);
   const error = ref<string | null>(null);
 
-  const performanceScore = ref<number | string>("--");
-  const accessibilityScore = ref<number | string>("--");
-  const bestPracticesScore = ref<number | string>("--");
-  const seoScore = ref<number | string>("--");
+  const performanceScore = ref<number | null>(null);
+  const accessibilityScore = ref<number | null>(null);
+  const bestPracticesScore = ref<number | null>(null);
+  const seoScore = ref<number | null>(null);
 
   const lcp = ref<number | null>(null);
   const fid = ref<number | null>(null);
@@ -20,11 +22,14 @@ export const useAuditStore = defineStore("audit", () => {
   const tbt = ref<number | null>(null);
   const speedIndex = ref<number | null>(null);
 
+  const securityAudit = ref<any>(null);
+
   const resetMetrics = () => {
-    performanceScore.value = "--";
-    accessibilityScore.value = "--";
-    bestPracticesScore.value = "--";
-    seoScore.value = "--";
+    error.value = null;
+    performanceScore.value = null;
+    accessibilityScore.value = null;
+    bestPracticesScore.value = null;
+    seoScore.value = null;
 
     lcp.value = null;
     fid.value = null;
@@ -37,11 +42,11 @@ export const useAuditStore = defineStore("audit", () => {
 
   const analyzeWebsite = async (websiteUrl: string) => {
     if (!websiteUrl.trim()) {
-      error.value = "Введите URL сайта";
+      error.value = "Введите URL сайта для анализа";
       return;
     }
 
-    isLoading.value = true;
+    isLighthouseLoading.value = true;
     error.value = null;
 
     resetMetrics();
@@ -50,10 +55,10 @@ export const useAuditStore = defineStore("audit", () => {
       const response: any = await auditApi.analyzeWebsite(websiteUrl);
 
       if (response?.success && response?.data) {
-        performanceScore.value = response.data.performance ?? 0;
-        accessibilityScore.value = response.data.accessibility ?? 0;
-        bestPracticesScore.value = response.data.bestPractices ?? 0;
-        seoScore.value = response.data.seo ?? 0;
+        performanceScore.value = response.data.performance ?? null;
+        accessibilityScore.value = response.data.accessibility ?? null;
+        bestPracticesScore.value = response.data.bestPractices ?? null;
+        seoScore.value = response.data.seo ?? null;
 
         // Core Web Vitals
         lcp.value = response.data.lcp ?? null;
@@ -73,23 +78,58 @@ export const useAuditStore = defineStore("audit", () => {
 
       resetMetrics();
     } finally {
-      isLoading.value = false;
+      isLighthouseLoading.value = false;
     }
   };
 
+  const fetchSecurityAudit = async (websiteUrl: string) => {
+    isSecurityLoading.value = true;
+    securityAudit.value = null;
+    error.value = null;
+
+    try {
+      const response: any = await auditApi.fetchSecurityAudit(websiteUrl);
+
+      if (response.error) {
+        error.value = response.error || "Ошибка аудита безопасности";
+        return;
+      }
+
+      securityAudit.value = response;
+    } catch (e: any) {
+      error.value =
+        e.response?.data?.error || e.message || "Ошибка аудита безопасности";
+    } finally {
+      isSecurityLoading.value = false;
+    }
+  };
+
+  // Computed для отображения с форматированием
+  const performanceScoreDisplay = computed(() => performanceScore.value ?? '--');
+  const accessibilityScoreDisplay = computed(() => accessibilityScore.value ?? '--');
+  const bestPracticesScoreDisplay = computed(() => bestPracticesScore.value ?? '--');
+  const seoScoreDisplay = computed(() => seoScore.value ?? '--');
+
   return {
     analyzeWebsite,
+    fetchSecurityAudit,
+    securityAudit,
     performanceScore,
     accessibilityScore,
     bestPracticesScore,
     seoScore,
+    performanceScoreDisplay,
+    accessibilityScoreDisplay,
+    bestPracticesScoreDisplay,
+    seoScoreDisplay,
     lcp,
     fid,
     cls,
     fcp,
     tbt,
     speedIndex,
-    isLoading,
+    isLighthouseLoading,
+    isSecurityLoading,
     error,
   };
 });

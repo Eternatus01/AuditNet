@@ -13,13 +13,25 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->api(prepend: [
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        ]);
+        
+        $middleware->statefulApi();
+
+        $middleware->encryptCookies(except: [
+            'XSRF-TOKEN',
+        ]);
+        
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (AuthenticationException $e, $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
-                    'message' => 'Не авторизован. Проверьте токен.',
+                    'message' => 'Не авторизован. Пожалуйста, войдите в систему.',
                 ], 401);
             }
         });

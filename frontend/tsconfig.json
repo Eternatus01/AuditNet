@@ -15,10 +15,11 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["vue"],
+    "types": ["vue", "unplugin-icons/types/vue"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "~icons/*": ["node_modules/unplugin-icons/types/vue"]
     }
   },
   "include": [
