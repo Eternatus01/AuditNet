@@ -42,26 +42,36 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { storeToRefs } from "pinia";
 import { Form } from "vee-validate";
 import { useAuthStore } from "../stores/auth";
+import type { SignInCredentials } from "../types";
 import InputField from "@/shared/ui/molecules/InputField.vue";
 import { Button } from "@/shared/ui/atoms";
 import { useRouter } from "vue-router";
-import { loginSchema, type LoginFormData } from "@/shared/validation/schemas";
+import { loginSchema } from "@/shared/validation/schemas";
 
 const router = useRouter();
 const authStore = useAuthStore();
-const error = computed(() => authStore.error);
-const isLoading = ref(false);
 
-const onSubmit = async (values: LoginFormData) => {
+// ✅ Используем storeToRefs для получения реактивного error из store
+const { error } = storeToRefs(authStore);
+
+// Локальное состояние компонента
+const isLoading = ref<boolean>(false);
+
+const onSubmit = async (values: unknown): Promise<void> => {
   isLoading.value = true;
   
   try {
-    await authStore.signIn(values.email, values.password);
-    router.push({ name: "home" });
-  } catch (err) {
-    console.error(err);
+    const credentials = values as SignInCredentials;
+    const response = await authStore.signIn(credentials);
+    
+    if (response) {
+      await router.push({ name: "home" });
+    }
+  } catch (err: unknown) {
+    // Ошибка уже обработана в store
   } finally {
     isLoading.value = false;
   }

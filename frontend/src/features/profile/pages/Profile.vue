@@ -60,14 +60,20 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useAuthStore } from "@/features/auth/stores/auth";
 
 const authStore = useAuthStore();
-const name = computed(() => authStore.user?.name);
-const id = computed(() => authStore.user?.id);
-const email = computed(() => authStore.user?.email);
 
-const avatarInitials = computed(() => {
+// ✅ Получаем user через storeToRefs
+const { user } = storeToRefs(authStore);
+
+// ✅ Computed для доступа к вложенным свойствам (это нормально)
+const name = computed<string | undefined>(() => user.value?.name);
+const id = computed<number | undefined>(() => user.value?.id);
+const email = computed<string | undefined>(() => user.value?.email);
+
+const avatarInitials = computed<string>(() => {
   if (!name.value) return '?';
   const parts = name.value.trim().split(' ');
   if (parts.length >= 2) {

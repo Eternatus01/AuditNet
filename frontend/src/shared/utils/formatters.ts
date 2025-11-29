@@ -1,6 +1,5 @@
 export const formatLCP = (value: number | null): string => {
   if (value === null) return "--";
-  // LCP приходит в миллисекундах, конвертируем в секунды
   return `${(value / 1000).toFixed(2)} s`;
 };
 

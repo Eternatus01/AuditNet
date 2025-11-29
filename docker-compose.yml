@@ -10,10 +10,37 @@ services:
       - ./backend/storage:/var/www/storage
     command: php artisan serve --host=0.0.0.0 --port=8000
     environment:
-      - DB_HOST=host.docker.internal
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=auditnet_db
+      - DB_USERNAME=audituser
+      - DB_PASSWORD=secret
     depends_on:
+      - db
+      - lighthouse
+    networks:
+      - default
+
+  # Queue Worker (обрабатывает фоновые задачи)
+  queue:
+    build: ./backend
+    container_name: auditnet_queue
+    restart: unless-stopped
+    volumes:
+      - ./backend:/var/www
+      - ./backend/storage:/var/www/storage
+    command: php artisan queue:work --tries=2 --timeout=180 --sleep=3 --max-jobs=100
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=auditnet_db
+      - DB_USERNAME=audituser
+      - DB_PASSWORD=secret
+    depends_on:
+      - db
+      - backend
       - lighthouse
     networks:
       - default

@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import { useAuthStore } from "@/features/auth/stores/auth";
+import { watch } from "vue";
+import { logger } from "@/shared/utils/logger";
 
 // Lazy loading для всех роутов
 const routes: RouteRecordRaw[] = [
@@ -58,14 +60,33 @@ const router = createRouter({
 
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
-
+  const AUTH_TIMEOUT_MS = 5000;
+  
+  // Ждем завершения загрузки профиля с помощью Promise + watch
   if (authStore.isProfileLoading) {
-    const timeout = 5000;
-    const startTime = Date.now();
-    
-    while (authStore.isProfileLoading && (Date.now() - startTime) < timeout) {
-      await new Promise(resolve => setTimeout(resolve, 50));
-    }
+    await new Promise<void>((resolve) => {
+      let unwatch: (() => void) | null = null;
+      
+      // Таймаут для предотвращения бесконечного ожидания
+      const timeoutId = setTimeout(() => {
+        if (unwatch) unwatch();
+        logger.warn("Auth profile loading timeout");
+        resolve();
+      }, AUTH_TIMEOUT_MS);
+
+      // Отслеживаем изменение состояния загрузки
+      unwatch = watch(
+        () => authStore.isProfileLoading,
+        (isLoading) => {
+          if (!isLoading) {
+            clearTimeout(timeoutId);
+            if (unwatch) unwatch();
+            resolve();
+          }
+        },
+        { immediate: true }
+      );
+    });
   }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {

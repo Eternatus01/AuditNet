@@ -1,5 +1,7 @@
+import type { ScoreClass } from "../types";
+
 export const useHistoryHelpers = () => {
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat("ru-RU", {
       year: "numeric",
@@ -10,14 +12,14 @@ export const useHistoryHelpers = () => {
     }).format(date);
   };
 
-  const getScoreClass = (score: number | null) => {
+  const getScoreClass = (score: number | null): ScoreClass => {
     if (score == null) return "unknown";
     if (score >= 90) return "good";
     if (score >= 50) return "average";
     return "poor";
   };
 
-  const scorePercent = (score: number | string | null) => {
+  const scorePercent = (score: number | string | null): number => {
     if (score === null || score === undefined) return 0;
     const n = typeof score === "string" ? parseFloat(score) : score;
     if (Number.isNaN(n)) return 0;

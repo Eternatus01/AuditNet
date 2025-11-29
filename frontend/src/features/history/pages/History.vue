@@ -130,15 +130,15 @@ const { formatDate, getScoreClass } = useHistoryHelpers();
 
 const audits = ref<Audit[]>([]);
 const pagination = ref<PaginationMeta | null>(null);
-const isLoading = ref(false);
-const error = ref("");
+const isLoading = ref<boolean>(false);
+const error = ref<string>("");
 
-const fetchHistory = async (page = 1) => {
+const fetchHistory = async (page = 1): Promise<void> => {
   isLoading.value = true;
   error.value = "";
 
   try {
-    const response: any = await historyApi.fetchHistory(page);
+    const response = await historyApi.fetchHistory(page);
 
     if (response.success && response.data) {
       audits.value = response.data.data;
@@ -150,18 +150,22 @@ const fetchHistory = async (page = 1) => {
     } else {
       error.value = "Не удалось загрузить историю";
     }
-  } catch (e: any) {
-    error.value = e.message || "Ошибка при загрузке истории";
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      error.value = e.message;
+    } else {
+      error.value = "Ошибка при загрузке истории";
+    }
   } finally {
     isLoading.value = false;
   }
 };
 
-const loadPage = (page: number) => {
+const loadPage = (page: number): void => {
   fetchHistory(page);
 };
 
-const viewAudit = (id: number) => {
+const viewAudit = (id: number): void => {
   router.push(`/history/${id}`);
 };
 

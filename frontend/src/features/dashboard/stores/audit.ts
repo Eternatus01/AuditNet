@@ -1,12 +1,13 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useAuditApi } from "../composables/useAuditApi";
+import type { SecurityAudit, ScoreDisplay, AuditResource, AnalyzeWebsiteResponse } from "../types";
 
 export const useAuditStore = defineStore("audit", () => {
   const auditApi = useAuditApi();
 
-  const isLighthouseLoading = ref(false);
-  const isSecurityLoading = ref(false);
+  const isLighthouseLoading = ref<boolean>(false);
+  const isSecurityLoading = ref<boolean>(false);
   const error = ref<string | null>(null);
 
   const performanceScore = ref<number | null>(null);
@@ -22,9 +23,9 @@ export const useAuditStore = defineStore("audit", () => {
   const tbt = ref<number | null>(null);
   const speedIndex = ref<number | null>(null);
 
-  const securityAudit = ref<any>(null);
+  const securityAudit = ref<SecurityAudit | null>(null);
 
-  const resetMetrics = () => {
+  const resetMetrics = (): void => {
     error.value = null;
     performanceScore.value = null;
     accessibilityScore.value = null;
@@ -40,10 +41,10 @@ export const useAuditStore = defineStore("audit", () => {
     speedIndex.value = null;
   };
 
-  const analyzeWebsite = async (websiteUrl: string) => {
+  const analyzeWebsite = async (websiteUrl: string): Promise<AnalyzeWebsiteResponse | null> => {
     if (!websiteUrl.trim()) {
       error.value = "Введите URL сайта для анализа";
-      return;
+      return null;
     }
 
     isLighthouseLoading.value = true;
@@ -52,43 +53,36 @@ export const useAuditStore = defineStore("audit", () => {
     resetMetrics();
 
     try {
-      const response: any = await auditApi.analyzeWebsite(websiteUrl);
+      const response = await auditApi.analyzeWebsite(websiteUrl);
 
-      if (response?.success && response?.data) {
-        performanceScore.value = response.data.performance ?? null;
-        accessibilityScore.value = response.data.accessibility ?? null;
-        bestPracticesScore.value = response.data.bestPractices ?? null;
-        seoScore.value = response.data.seo ?? null;
-
-        // Core Web Vitals
-        lcp.value = response.data.lcp ?? null;
-        fid.value = response.data.fid ?? null;
-        cls.value = response.data.cls ?? null;
-
-        // Дополнительные метрики
-        fcp.value = response.data.fcp ?? null;
-        tbt.value = response.data.tbt ?? null;
-        speedIndex.value = response.data.speedIndex ?? null;
+      if (response?.success) {
+        // НЕ выключаем loading - он будет активен до окончания polling
+        return response;
       } else {
-        error.value = "Не удалось получить результаты анализа";
+        error.value = "Не удалось запустить анализ";
+        isLighthouseLoading.value = false;
+        return null;
       }
-    } catch (e: any) {
-      error.value =
-        e.response?.data?.message || e.message || "Ошибка при анализе сайта";
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        error.value = e.message;
+      } else {
+        error.value = "Ошибка при анализе сайта";
+      }
 
       resetMetrics();
-    } finally {
       isLighthouseLoading.value = false;
+      return null;
     }
   };
 
-  const fetchSecurityAudit = async (websiteUrl: string) => {
+  const fetchSecurityAudit = async (websiteUrl: string): Promise<void> => {
     isSecurityLoading.value = true;
     securityAudit.value = null;
     error.value = null;
 
     try {
-      const response: any = await auditApi.fetchSecurityAudit(websiteUrl);
+      const response = await auditApi.fetchSecurityAudit(websiteUrl);
 
       if (response.error) {
         error.value = response.error || "Ошибка аудита безопасности";
@@ -96,23 +90,62 @@ export const useAuditStore = defineStore("audit", () => {
       }
 
       securityAudit.value = response;
-    } catch (e: any) {
-      error.value =
-        e.response?.data?.error || e.message || "Ошибка аудита безопасности";
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        error.value = e.message;
+      } else {
+        error.value = "Ошибка аудита безопасности";
+      }
     } finally {
       isSecurityLoading.value = false;
     }
   };
 
-  // Computed для отображения с форматированием
-  const performanceScoreDisplay = computed(() => performanceScore.value ?? '--');
-  const accessibilityScoreDisplay = computed(() => accessibilityScore.value ?? '--');
-  const bestPracticesScoreDisplay = computed(() => bestPracticesScore.value ?? '--');
-  const seoScoreDisplay = computed(() => seoScore.value ?? '--');
+  const performanceScoreDisplay = computed<ScoreDisplay>(() => performanceScore.value ?? '--');
+  const accessibilityScoreDisplay = computed<ScoreDisplay>(() => accessibilityScore.value ?? '--');
+  const bestPracticesScoreDisplay = computed<ScoreDisplay>(() => bestPracticesScore.value ?? '--');
+  const seoScoreDisplay = computed<ScoreDisplay>(() => seoScore.value ?? '--');
+
+  const checkAuditStatus = async (auditId: number) => {
+    try {
+      return await auditApi.checkAuditStatus(auditId);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        error.value = e.message;
+      }
+      return null;
+    }
+  };
+
+  const updateFromPolling = (auditData: AuditResource): void => {
+    performanceScore.value = auditData.scores.performance ?? null;
+    accessibilityScore.value = auditData.scores.accessibility ?? null;
+    bestPracticesScore.value = auditData.scores.best_practices ?? null;
+    seoScore.value = auditData.scores.seo ?? null;
+
+    lcp.value = auditData.core_web_vitals.lcp ?? null;
+    fid.value = auditData.core_web_vitals.fid ?? null;
+    cls.value = auditData.core_web_vitals.cls ?? null;
+
+    fcp.value = auditData.additional_metrics.fcp ?? null;
+    tbt.value = auditData.additional_metrics.tbt ?? null;
+    speedIndex.value = auditData.additional_metrics.speed_index ?? null;
+
+    isLighthouseLoading.value = false;
+    error.value = null;
+  };
+
+  const setError = (message: string): void => {
+    error.value = message;
+    isLighthouseLoading.value = false;
+  };
 
   return {
     analyzeWebsite,
     fetchSecurityAudit,
+    checkAuditStatus,
+    updateFromPolling,
+    setError,
     securityAudit,
     performanceScore,
     accessibilityScore,

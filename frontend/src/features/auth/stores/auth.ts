@@ -1,51 +1,67 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useAuthApi } from "../composables/useAuthApi";
+import type { User, SignUpCredentials, SignInCredentials, AuthResponse } from "../types";
 
 export const useAuthStore = defineStore("auth", () => {
   const authApi = useAuthApi();
-  const user = ref<{ id: number; name: string; email: string } | null>(null);
+
+  const user = ref<User | null>(null);
   const error = ref<string | null>(null);
-  const isProfileLoading = ref(false); // Флаг загрузки профиля при инициализации
-  const isAuthenticated = computed(() => !!user.value);
+  const isProfileLoading = ref<boolean>(false);
+  const isAuthenticated = computed<boolean>(() => !!user.value);
 
-  const signUp = async (name: string, email: string, password: string) => {
+  const signUp = async (credentials: SignUpCredentials): Promise<AuthResponse | undefined> => {
     try {
       error.value = null;
-      const response = await authApi.signUp(name, email, password);
+      const response = await authApi.signUp(credentials);
 
       user.value = response.user ?? null;
 
       return response;
-    } catch (e: any) {
-      error.value = e.response?.data?.message || e.message || "Ошибка регистрации";
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        error.value = e.message;
+      } else {
+        error.value = "Ошибка регистрации";
+      }
+      return undefined;
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (credentials: SignInCredentials): Promise<AuthResponse | undefined> => {
     try {
       error.value = null;
-      const response = await authApi.signIn(email, password);
+      const response = await authApi.signIn(credentials);
 
       user.value = response.user ?? null;
 
       return response;
-    } catch (e: any) {
-      error.value = e.response?.data?.message || e.message || "Ошибка авторизации";
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        error.value = e.message;
+      } else {
+        error.value = "Ошибка авторизации";
+      }
+      return undefined;
     }
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     try {
       error.value = null;
       await authApi.logout();
       user.value = null;
-    } catch (e: any) {
-      error.value = e.response?.data?.message || e.message || "Ошибка выхода";
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        error.value = e.message;
+      } else {
+        error.value = "Ошибка выхода";
+      }
     }
   };
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (): Promise<User | null> => {
     isProfileLoading.value = true;
     try {
       const response = await authApi.fetchProfile();
@@ -59,14 +75,19 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
+  const clearError = (): void => {
+    error.value = null;
+  };
+
   return {
+    user,
+    error,
+    isProfileLoading,
+    isAuthenticated,
     signUp,
     signIn,
     logout,
     fetchProfile,
-    error,
-    user,
-    isAuthenticated,
-    isProfileLoading,
+    clearError,
   };
 });

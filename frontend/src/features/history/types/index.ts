@@ -21,3 +21,40 @@ export interface PaginationMeta {
   total: number;
 }
 
+export interface PaginatedResponse<T> {
+  success: boolean;
+  data: {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    total: number;
+  };
+}
+
+export interface AuditDetailResponse {
+  success: boolean;
+  data: Audit;
+}
+
+export type ScoreClass = 'good' | 'average' | 'poor' | 'unknown';
+
+export interface ApiError {
+  response?: {
+    status: number;
+    data: {
+      message?: string;
+      error?: string;
+    };
+  };
+  message: string;
+}
+
+export function isApiError(error: unknown): error is ApiError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as ApiError).message === "string"
+  );
+}
+

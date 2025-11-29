@@ -111,13 +111,13 @@ import IconLucideClock from "~icons/lucide/clock";
 import IconLucideZap from "~icons/lucide/zap";
 import IconLucideLayout from "~icons/lucide/layout";
 
+import type { AuditDescriptions } from "../types";
+
 defineProps<{
   lcp: number | null;
   fid: number | null;
   cls: number | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  descriptions: any;
-  // eslint-disable-next-line no-unused-vars
+  descriptions: AuditDescriptions;
   isExpanded: (key: string) => boolean;
 }>();
 

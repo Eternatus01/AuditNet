@@ -10,6 +10,7 @@ class Audit extends Model
     protected $fillable = [
         'user_id',
         'url',
+        'status',
         'performance',
         'accessibility',
         'best_practices',
@@ -21,6 +22,7 @@ class Audit extends Model
         'tbt',
         'speed_index',
         'audited_at',
+        'error_message',
     ];
 
     protected $casts = [

@@ -31,12 +31,13 @@
 <script setup lang="ts">
 import { IconButton } from '@/shared/ui/atoms';
 import IconLucideChevronDown from '~icons/lucide/chevron-down';
+import type { MetricStatus } from "../types";
 
 defineProps<{
   title: string;
   fullName: string;
   formattedValue: string;
-  status: string;
+  status: MetricStatus;
   threshold: string;
   description: string;
   isExpanded: boolean;

@@ -1,6 +1,5 @@
 import * as yup from "yup";
 
-// Общие правила валидации
 export const emailSchema = yup
   .string()
   .required("Email обязателен для заполнения")
@@ -17,20 +16,17 @@ export const nameSchema = yup
   .min(2, "Имя должно содержать минимум 2 символа")
   .max(50, "Имя не должно превышать 50 символов");
 
-// Схема для формы логина
 export const loginSchema = yup.object({
   email: emailSchema,
   password: passwordSchema,
 });
 
-// Схема для формы регистрации
 export const registerSchema = yup.object({
   name: nameSchema,
   email: emailSchema,
   password: passwordSchema,
 });
 
-// Типы для форм
 export type LoginFormData = yup.InferType<typeof loginSchema>;
 export type RegisterFormData = yup.InferType<typeof registerSchema>;
 

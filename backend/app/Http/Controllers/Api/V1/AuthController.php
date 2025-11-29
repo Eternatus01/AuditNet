@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\LoginUserRequest;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,15 +17,10 @@ class AuthController extends Controller
 
             $user = User::create($data);
 
-            // Используем session-based аутентификацию вместо токенов
             Auth::login($user);
 
             return response()->json([
-                'user'=> [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                ],
+                'user' => new UserResource($user),
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -47,15 +43,10 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
-            // Регенерируем сессию для безопасности
             $request->session()->regenerate();
 
             return response()->json([
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                ],
+                'user' => new UserResource($user),
             ]);
 
         } catch (\Exception $e) {

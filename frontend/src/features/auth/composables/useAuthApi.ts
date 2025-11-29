@@ -1,85 +1,72 @@
 import { apiClient, getCsrfCookie } from "@/shared/utils/apiClient";
-
-interface AuthResponse {
-  user: { id: number; name: string; email: string };
-}
-
-interface LogoutResponse {
-  message: string;
-}
-
-interface ProfileResponse {
-  id: number;
-  name: string;
-  email: string;
-}
+import { handleApiError, isApiError } from "@/shared/utils/errorHandling";
+import type {
+  AuthResponse,
+  LogoutResponse,
+  ProfileResponse,
+  SignUpCredentials,
+  SignInCredentials,
+} from "../types";
 
 export const useAuthApi = () => {
-  const signUp = async (name: string, email: string, password: string): Promise<AuthResponse> => {
+  const signUp = async (credentials: SignUpCredentials): Promise<AuthResponse> => {
     try {
       await getCsrfCookie();
 
-      const response: AuthResponse = await apiClient("/auth/register", {
+      const response = await apiClient<AuthResponse>("/auth/register", {
         method: "POST",
-        data: { name, email, password },
+        data: credentials,
       });
 
       return response;
-    } catch (e: any) {
-      if (e.response?.status === 422 && e.response.data?.errors) {
-        throw new Error(Object.values(e.response.data.errors).flat().join(" "));
-      }
-      throw new Error(e.response?.data?.message || e.message || "Ошибка регистрации");
+    } catch (error: unknown) {
+      return handleApiError(error, "Ошибка регистрации");
     }
   };
 
-  const signIn = async (email: string, password: string): Promise<AuthResponse> => {
+  const signIn = async (credentials: SignInCredentials): Promise<AuthResponse> => {
     try {
       await getCsrfCookie();
 
-      const response: AuthResponse = await apiClient("/auth/login", {
+      const response = await apiClient<AuthResponse>("/auth/login", {
         method: "POST",
-        data: {
-          email,
-          password,
-        },
+        data: credentials,
       });
 
       return response;
-    } catch (e: any) {
-      if (e.response?.status === 422 && e.response.data?.errors) {
-        throw new Error(Object.values(e.response.data.errors).flat().join(" "));
+    } catch (error: unknown) {
+      if (isApiError(error) && error.response?.status === 401) {
+        throw new Error(error.response?.data?.message || "Неверный email или пароль");
       }
 
-      if (e.response?.status === 401) {
-        throw new Error(e.response?.data?.message || "Неверный email или пароль");
-      }
-
-      throw new Error(e.response?.data?.message || e.message || "Ошибка авторизации");
+      return handleApiError(error, "Ошибка авторизации");
     }
   };
 
   const logout = async (): Promise<LogoutResponse> => {
     try {
-      const response: LogoutResponse = await apiClient("/auth/logout", {
+      const response = await apiClient<LogoutResponse>("/auth/logout", {
         method: "POST",
       });
       return response;
-    } catch (e: any) {
-      throw new Error(e.response?.data?.message || e.message || "Ошибка выхода");
+    } catch (error: unknown) {
+      return handleApiError(error, "Ошибка выхода");
     }
   };
 
   const fetchProfile = async (): Promise<ProfileResponse> => {
     try {
-      const data: ProfileResponse = await apiClient("/user", {
+      const data = await apiClient<ProfileResponse>("/user", {
         method: "GET",
       });
 
-      if (!data.id) throw new Error("Профиль не найден");
+      if (!data.id) {
+        throw new Error("Профиль не найден");
+      }
+
       return data;
-    } catch (e: any) {
-      throw new Error(e.response?.data?.message || e.message || "Ошибка получения профиля");
+    } catch (error: unknown) {
+      return handleApiError(error, "Ошибка получения профиля");
     }
   };
 

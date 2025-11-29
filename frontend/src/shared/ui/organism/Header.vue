@@ -13,14 +13,22 @@
 
 <script setup lang="ts">
 import { computed, ref, provide, watch } from "vue";
+import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/features/auth/stores/auth";
 import Sidebar from "@/shared/ui/organism/Sidebar.vue";
 
 const authStore = useAuthStore();
-const isLogged = computed(() => authStore.isAuthenticated);
+
+// ✅ Используем storeToRefs для получения реактивных свойств
+const { isAuthenticated, user } = storeToRefs(authStore);
+
 const isCollapsed = ref(false);
 
-const userName = computed(() => authStore.user?.name || "");
+// ✅ Computed для isLogged (он ссылается на computed из store, но можно упростить)
+const isLogged = isAuthenticated;
+
+// ✅ Computed для userName (есть логика: || "")
+const userName = computed(() => user.value?.name || "");
 
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value;

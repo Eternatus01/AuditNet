@@ -20,6 +20,18 @@
       @analyze="analyzeWebsite"
     />
 
+    <!-- Индикатор загрузки во время анализа -->
+    <div v-if="isLoading && !isAuditReady" class="loading-indicator">
+      <div class="loading-spinner"></div>
+      <h3>Анализ выполняется...</h3>
+      <p>Это может занять 30-60 секунд. Пожалуйста, подождите.</p>
+      <div class="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+
     <div class="dashboard-results" :class="{ hidden: !isAuditReady }">
       <ScoresSection
         :performance-score="performanceScoreDisplay"
@@ -57,55 +69,135 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, onBeforeUnmount } from "vue";
+import { storeToRefs } from "pinia";
 import { useAuditStore } from "../stores/audit";
 import { useAuditDescriptions } from "../composables/useAuditDescriptions";
 import { useToggle } from "@/shared/composables/useToggle";
+import { logger } from "@/shared/utils/logger";
 import UrlInputSection from "../components/UrlInputSection.vue";
 import ScoresSection from "../components/ScoresSection.vue";
 import CoreWebVitalsSection from "../components/CoreWebVitalsSection.vue";
 import SecuritySection from "../components/SecuritySection.vue";
 
+const POLLING_INTERVAL_MS = 3000;
+const MAX_POLLING_ATTEMPTS = 60;
+
 const auditStore = useAuditStore();
 const descriptions = useAuditDescriptions();
 const { expandedItems: expandedInfo, toggle: toggleInfo } = useToggle();
 
+const {
+  // Loading states
+  isLighthouseLoading,
+  isSecurityLoading,
+  error,
+  
+  // Scores
+  performanceScore,
+  accessibilityScore,
+  bestPracticesScore,
+  seoScore,
+  
+  // Display scores (computed из store)
+  performanceScoreDisplay,
+  accessibilityScoreDisplay,
+  bestPracticesScoreDisplay,
+  seoScoreDisplay,
+  
+  // Core Web Vitals
+  lcp,
+  fid,
+  cls,
+  
+  // Security
+  securityAudit,
+} = storeToRefs(auditStore);
+
 const websiteUrl = ref("");
-const isLoading = computed(() => auditStore.isLighthouseLoading || auditStore.isSecurityLoading);
-const error = computed(() => auditStore.error);
+const pollInterval = ref<ReturnType<typeof setInterval> | null>(null);
+const pollingAttempts = ref(0);
 
-const performanceScore = computed(() => auditStore.performanceScore);
-const accessibilityScore = computed(() => auditStore.accessibilityScore);
-const bestPracticesScore = computed(() => auditStore.bestPracticesScore);
-const seoScore = computed(() => auditStore.seoScore);
+const isLoading = computed(() => 
+  isLighthouseLoading.value || isSecurityLoading.value
+);
 
-const performanceScoreDisplay = computed(() => auditStore.performanceScoreDisplay);
-const accessibilityScoreDisplay = computed(() => auditStore.accessibilityScoreDisplay);
-const bestPracticesScoreDisplay = computed(() => auditStore.bestPracticesScoreDisplay);
-const seoScoreDisplay = computed(() => auditStore.seoScoreDisplay);
-
-const lcp = computed(() => auditStore.lcp);
-const fid = computed(() => auditStore.fid);
-const cls = computed(() => auditStore.cls);
-
-const securityAudit = computed(() => auditStore.securityAudit);
-const securityError = computed(() => auditStore.error);
+const securityError = computed(() => error.value);
 
 const analyzeWebsite = async () => {
   const lighthousePromise = auditStore
     .analyzeWebsite(websiteUrl.value)
+    .then((response: any) => {
+      if (response?.data?.audit_id) {
+        startPolling(response.data.audit_id);
+      }
+    })
     .catch((err) => {
-      console.error("Lighthouse error:", err);
+      logger.error("Lighthouse error:", err);
     });
 
   const securityPromise = auditStore
     .fetchSecurityAudit(websiteUrl.value)
     .catch((err) => {
-      console.error("Security audit error:", err);
+      logger.error("Security audit error:", err);
     });
 
   await Promise.all([lighthousePromise, securityPromise]);
 };
+
+const clearPolling = () => {
+  if (pollInterval.value) {
+    clearInterval(pollInterval.value);
+    pollInterval.value = null;
+    pollingAttempts.value = 0;
+  }
+};
+
+const startPolling = (auditId: number) => {
+  clearPolling();
+  
+  logger.log('🔄 Начинаем polling для audit_id:', auditId);
+  
+  pollInterval.value = setInterval(async () => {
+    pollingAttempts.value++;
+    
+    if (pollingAttempts.value >= MAX_POLLING_ATTEMPTS) {
+      clearPolling();
+      auditStore.setError('Превышено время ожидания анализа. Попробуйте позже.');
+      logger.error('❌ Polling timeout: превышено максимальное количество попыток');
+      return;
+    }
+    
+    try {
+      const response = await auditStore.checkAuditStatus(auditId);
+      
+      if (!response || !response.data) {
+        logger.warn('⚠️ Не удалось получить статус');
+        return;
+      }
+      
+      const auditData = response.data;
+      logger.log(`📊 Попытка ${pollingAttempts.value}/${MAX_POLLING_ATTEMPTS} - Статус: ${auditData.status}`);
+      
+      if (auditData.status === 'completed') {
+        clearPolling();
+        logger.log('✅ Анализ завершен! Обновляем данные...', auditData);
+        auditStore.updateFromPolling(auditData);
+      } else if (auditData.status === 'failed') {
+        clearPolling();
+        logger.error('❌ Анализ провалился:', auditData.error_message);
+        auditStore.setError(auditData.error_message || 'Ошибка анализа');
+      }
+    } catch (err) {
+      logger.error('Polling error:', err);
+    }
+  }, POLLING_INTERVAL_MS);
+};
+
+onBeforeUnmount(() => {
+  clearPolling();
+  logger.log('🧹 Cleanup: polling остановлен');
+});
 
 const isAuditReady = computed(() => {
   return [
@@ -120,3 +212,90 @@ const isSecurityReady = computed(() => {
   return securityAudit.value !== null || auditStore.isSecurityLoading;
 });
 </script>
+
+<style scoped>
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  margin: 2rem 0;
+  background: linear-gradient(135deg, rgba(100, 108, 255, 0.1) 0%, rgba(255, 107, 107, 0.1) 100%);
+  border: 2px solid rgba(100, 108, 255, 0.3);
+  border-radius: 16px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(100, 108, 255, 0.2);
+  border-top-color: #646cff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1.5rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-indicator h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 0.5rem 0;
+}
+
+.loading-indicator p {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 1.5rem 0;
+}
+
+.loading-dots {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.loading-dots span {
+  width: 12px;
+  height: 12px;
+  background: #646cff;
+  border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.loading-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+</style>

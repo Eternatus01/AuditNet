@@ -32,10 +32,11 @@
 <script setup lang="ts">
 import { IconButton } from '@/shared/ui/atoms';
 import IconLucideChevronDown from '~icons/lucide/chevron-down';
+import type { ScoreDisplay } from "../types";
 
 defineProps<{
   title: string;
-  score: number | string;
+  score: ScoreDisplay;
   iconClass: string;
   description: string;
   isExpanded: boolean;

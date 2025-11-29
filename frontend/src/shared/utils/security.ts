@@ -1,6 +1,3 @@
-/**
- * Словарь для преобразования технических названий заголовков в читаемые
- */
 const HEADER_NAMES: Record<string, string> = {
   "strict-transport-security": "HSTS",
   "content-security-policy": "CSP",

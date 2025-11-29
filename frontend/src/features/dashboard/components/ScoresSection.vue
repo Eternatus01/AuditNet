@@ -76,14 +76,14 @@ import IconLucideUsers from "~icons/lucide/users";
 import IconLucideCheckCircle from "~icons/lucide/check-circle";
 import IconLucideSearch from "~icons/lucide/search";
 
+import type { ScoreDisplay, AuditDescriptions } from "../types";
+
 defineProps<{
-  performanceScore: number | string;
-  accessibilityScore: number | string;
-  bestPracticesScore: number | string;
-  seoScore: number | string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  descriptions: any;
-  // eslint-disable-next-line no-unused-vars
+  performanceScore: ScoreDisplay;
+  accessibilityScore: ScoreDisplay;
+  bestPracticesScore: ScoreDisplay;
+  seoScore: ScoreDisplay;
+  descriptions: AuditDescriptions;
   isExpanded: (key: string) => boolean;
 }>();
 

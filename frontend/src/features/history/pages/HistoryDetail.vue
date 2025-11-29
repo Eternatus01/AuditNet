@@ -81,29 +81,33 @@ const { toggle, isExpanded } = useToggle();
 const descriptions = useAuditDescriptions();
 
 const audit = ref<Audit | null>(null);
-const isLoading = ref(false);
-const error = ref("");
+const isLoading = ref<boolean>(false);
+const error = ref<string>("");
 
-const fetchAudit = async (id: string) => {
+const fetchAudit = async (id: string): Promise<void> => {
   isLoading.value = true;
   error.value = "";
 
   try {
-    const response: any = await historyApi.fetchAuditDetail(id);
+    const response = await historyApi.fetchAuditDetail(id);
 
     if (response.success && response.data) {
       audit.value = response.data;
     } else {
       error.value = "Не удалось загрузить данные аудита";
     }
-  } catch (e: any) {
-    error.value = e.message || "Ошибка при загрузке аудита";
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      error.value = e.message;
+    } else {
+      error.value = "Ошибка при загрузке аудита";
+    }
   } finally {
     isLoading.value = false;
   }
 };
 
-const goBack = () => {
+const goBack = (): void => {
   router.push({ name: "history" });
 };
 

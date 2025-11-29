@@ -17,6 +17,7 @@ class AuditService
         Audit::create([
             'user_id' => $user->id,
             'url' => $url,
+            'status' => 'completed',
             'performance' => $results['performance'],
             'accessibility' => $results['accessibility'],
             'best_practices' => $results['bestPractices'],
@@ -31,6 +32,11 @@ class AuditService
         ]);
 
         return $results;
+    }
+
+    public function runLighthouseForJob(string $url): array
+    {
+        return $this->runLighthouse($url);
     }
 
     protected function runLighthouse(string $url): array

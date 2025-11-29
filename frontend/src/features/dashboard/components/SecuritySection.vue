@@ -155,14 +155,13 @@ import IconLucideX from "~icons/lucide/x";
 import IconLucideAlertTriangle from "~icons/lucide/alert-triangle";
 import IconLucideMinus from "~icons/lucide/minus";
 
+import type { SecurityAudit, AuditDescriptions } from "../types";
+
 defineProps<{
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  securityAudit: any;
+  securityAudit: SecurityAudit | null;
   securityError: string;
   isSecurityReady: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  descriptions: any;
-  // eslint-disable-next-line no-unused-vars
+  descriptions: AuditDescriptions;
   isExpanded: (key: string) => boolean;
 }>();
 
