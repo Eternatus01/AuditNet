@@ -30,22 +30,16 @@ export interface AuditResource {
   user_id: number;
   url: string;
   status: string;
-  scores: {
-    performance: number | null;
-    accessibility: number | null;
-    best_practices: number | null;
-    seo: number | null;
-  };
-  core_web_vitals: {
-    lcp: number | null;
-    fid: number | null;
-    cls: number | null;
-  };
-  additional_metrics: {
-    fcp: number | null;
-    tbt: number | null;
-    speed_index: number | null;
-  };
+  performance: number | null;
+  accessibility: number | null;
+  best_practices: number | null;
+  seo: number | null;
+  lcp: number | null;
+  fid: number | null;
+  cls: number | null;
+  fcp: number | null;
+  tbt: number | null;
+  speed_index: number | null;
   error_message: string | null;
   audited_at: string | null;
   created_at: string;

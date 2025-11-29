@@ -12,8 +12,8 @@ export const useHistoryHelpers = () => {
     }).format(date);
   };
 
-  const getScoreClass = (score: number | null): ScoreClass => {
-    if (score == null) return "unknown";
+  const getScoreClass = (score: number | null | undefined): ScoreClass => {
+    if (score == null || score === undefined) return "unknown";
     if (score >= 90) return "good";
     if (score >= 50) return "average";
     return "poor";

@@ -87,14 +87,24 @@ const error = ref<string>("");
 const fetchAudit = async (id: string): Promise<void> => {
   isLoading.value = true;
   error.value = "";
+  audit.value = null;
 
   try {
     const response = await historyApi.fetchAuditDetail(id);
 
-    if (response.success && response.data) {
-      audit.value = response.data;
+    if (response?.success && response.data) {
+      const auditData = 'data' in response.data && response.data.data
+        ? response.data.data
+        : response.data;
+      
+      if (auditData && typeof auditData === 'object' && 'id' in auditData) {
+        audit.value = auditData as Audit;
+      } else {
+        error.value = "Не удалось загрузить данные аудита: неверный формат";
+      }
     } else {
       error.value = "Не удалось загрузить данные аудита";
+      audit.value = null;
     }
   } catch (e: unknown) {
     if (e instanceof Error) {
@@ -102,6 +112,7 @@ const fetchAudit = async (id: string): Promise<void> => {
     } else {
       error.value = "Ошибка при загрузке аудита";
     }
+    audit.value = null;
   } finally {
     isLoading.value = false;
   }

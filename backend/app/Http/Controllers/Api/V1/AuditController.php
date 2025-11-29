@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AuditRequest;
 use App\Http\Resources\AuditResource;
-use App\Http\Resources\AuditCollection;
 use App\Jobs\AnalyzeWebsiteJob;
 use App\Models\Audit;
 use Illuminate\Http\JsonResponse;
@@ -15,11 +14,16 @@ use App\Services\AuditService;
 
 class AuditController extends Controller
 {
+    protected function getUser()
+    {
+        return Auth::user();
+    }
+
     public function analyze(AuditRequest $request): JsonResponse
     {
         try {
             $url = $request->input('url');
-            $user = Auth::user();
+            $user = $this->getUser();
             
             if (!$user) {
                 return response()->json([
@@ -31,7 +35,7 @@ class AuditController extends Controller
             $audit = Audit::create([
                 'user_id' => $user->id,
                 'url' => $url,
-                'status' => 'pending',
+                'status' => Audit::STATUS_PENDING,
             ]);
 
             AnalyzeWebsiteJob::dispatch($url, $user->id, $audit->id);
@@ -41,7 +45,7 @@ class AuditController extends Controller
                 'message' => 'Анализ начался. Результаты будут доступны через 1-2 минуты.',
                 'data' => [
                     'audit_id' => $audit->id,
-                    'status' => 'pending',
+                    'status' => Audit::STATUS_PENDING,
                     'url' => $url,
                 ],
             ], 202);
@@ -61,7 +65,7 @@ class AuditController extends Controller
     public function history(): JsonResponse
     {
         try {
-            $user = Auth::user();
+            $user = $this->getUser();
             if (!$user) {
                 return response()->json([
                     'success' => false,
@@ -95,7 +99,7 @@ class AuditController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $user = Auth::user();
+            $user = $this->getUser();
             if (!$user) {
                 return response()->json([
                     'success' => false,
@@ -121,7 +125,7 @@ class AuditController extends Controller
     public function status(int $id): JsonResponse
     {
         try {
-            $user = Auth::user();
+            $user = $this->getUser();
             if (!$user) {
                 return response()->json([
                     'success' => false,

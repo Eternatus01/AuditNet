@@ -13,15 +13,10 @@
         <IconLucideChevronDown :class="{ rotated: isExpanded('web-vitals') }" />
       </IconButton>
     </div>
-    <div
-      v-if="isExpanded('web-vitals')"
-      class="info-description section-description"
-    >
+    <div v-if="isExpanded('web-vitals')" class="info-description section-description">
       {{ descriptions.coreWebVitals.section }}
     </div>
-    <p class="section-subtitle">
-      Ключевые метрики производительности от Google
-    </p>
+    <p class="section-subtitle">Ключевые метрики производительности от Google</p>
 
     <!-- Gauge Charts -->
     <div class="gauges-container">
@@ -102,7 +97,7 @@
 
 <script setup lang="ts">
 import MetricCard from "./MetricCard.vue";
-import { IconButton } from '@/shared/ui/atoms';
+import { IconButton } from "@/shared/ui/atoms";
 import { GaugeChart } from "@/shared/ui/molecules";
 import { formatLCP, formatFID, formatCLS } from "@/shared/utils/formatters";
 import { getMetricStatus } from "@/shared/utils/metrics";
@@ -164,16 +159,18 @@ const onToggle = (_key: string) => {
 }
 
 .gauges-container::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(100, 108, 255, 0.5) 50%, 
-    transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(100, 108, 255, 0.5) 50%,
+    transparent 100%
+  );
 }
 
 @media (max-width: 1100px) {
@@ -193,4 +190,3 @@ const onToggle = (_key: string) => {
   }
 }
 </style>
-

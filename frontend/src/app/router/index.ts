@@ -58,23 +58,27 @@ const router = createRouter({
   routes,
 });
 
+let profileFetchInitiated = false;
+
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
   const AUTH_TIMEOUT_MS = 5000;
   
-  // Ждем завершения загрузки профиля с помощью Promise + watch
+  if (!authStore.isAuthenticated && !authStore.isProfileLoading && !profileFetchInitiated) {
+    profileFetchInitiated = true;
+    authStore.fetchProfile();
+  }
+  
   if (authStore.isProfileLoading) {
     await new Promise<void>((resolve) => {
       let unwatch: (() => void) | null = null;
       
-      // Таймаут для предотвращения бесконечного ожидания
       const timeoutId = setTimeout(() => {
         if (unwatch) unwatch();
         logger.warn("Auth profile loading timeout");
         resolve();
       }, AUTH_TIMEOUT_MS);
 
-      // Отслеживаем изменение состояния загрузки
       unwatch = watch(
         () => authStore.isProfileLoading,
         (isLoading) => {

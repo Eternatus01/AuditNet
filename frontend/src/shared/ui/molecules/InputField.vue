@@ -61,7 +61,6 @@ const debouncedValidate = props.debounceMs > 0
 const handleChange = (event: InputEvent) => {
   originalHandleChange(event);
   
-  // Если включен debounce, вызываем debounced валидацию
   if (debouncedValidate) {
     debouncedValidate();
   }

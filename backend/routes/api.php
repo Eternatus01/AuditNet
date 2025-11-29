@@ -8,7 +8,15 @@ use App\Http\Controllers\Api\V1\SecurityController;
 use App\Http\Resources\UserResource;
 
 Route::get('/user', function (Request $request) {
-    return new UserResource($request->user());
+    $user = $request->user();
+    
+    if (!$user) {
+        return response()->json([
+            'message' => 'Не авторизован'
+        ], 401);
+    }
+    
+    return new UserResource($user);
 })->middleware(['web', 'auth:web']);
 
 Route::prefix('auth')->middleware(['web', 'throttle:api'])->group(function () {

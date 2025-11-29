@@ -9,7 +9,8 @@ export const useHistoryApi = () => {
         method: "GET",
       });
     } catch (error: unknown) {
-      return handleApiError(error, "Ошибка при загрузке истории");
+      handleApiError(error, "Ошибка при загрузке истории");
+      throw error;
     }
   };
 
@@ -19,7 +20,8 @@ export const useHistoryApi = () => {
         method: "GET",
       });
     } catch (error: unknown) {
-      return handleApiError(error, "Ошибка при загрузке аудита");
+      handleApiError(error, "Ошибка при загрузке аудита");
+      throw error;
     }
   };
 

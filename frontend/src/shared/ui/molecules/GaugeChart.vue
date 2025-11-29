@@ -66,12 +66,10 @@ const formattedValue = computed(() => {
   return props.formatter(props.value) + props.unit;
 });
 
-// Вычисляем процент для визуализации (0-100)
 const percentage = computed(() => {
   if (props.value === null) return 0;
   
-  // Нормализуем значение в процент (чем меньше - тем лучше для LCP, FID, CLS)
-  const maxValue = props.poorThreshold * 1.5; // Максимальное значение для шкалы
+  const maxValue = props.poorThreshold * 1.5;
   const normalized = Math.min((props.value / maxValue) * 100, 100);
   
   return 100 - normalized; // Инвертируем, чтобы хорошие значения были справа

@@ -2,19 +2,17 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SecurityAuditRequest;
 use App\Jobs\SecurityAuditJob;
 
 class SecurityController extends Controller
 {
-    public function analyze(Request $request)
+    public function analyze(SecurityAuditRequest $request): JsonResponse
     {
         $url = $request->input('url');
-        if (!$url) {
-            return response()->json(['error' => 'No url provided'], 400);
-        }
 
         if (!preg_match('/^https?:\/\//', $url)) {
             $url = 'https://' . $url;

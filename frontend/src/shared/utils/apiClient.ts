@@ -40,6 +40,7 @@ axiosInstance.interceptors.request.use(
     if (token) {
       config.headers['X-XSRF-TOKEN'] = token;
     }
+    
     return config;
   },
   (error: AxiosError) => Promise.reject(error)
@@ -47,9 +48,7 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => response,
-  async (error: AxiosError) => {
-    return Promise.reject(error);
-  }
+  async (error: AxiosError) => Promise.reject(error)
 );
 
 export type ApiClientOptions = AxiosRequestConfig;

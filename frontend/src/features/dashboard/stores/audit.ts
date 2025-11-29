@@ -56,7 +56,6 @@ export const useAuditStore = defineStore("audit", () => {
       const response = await auditApi.analyzeWebsite(websiteUrl);
 
       if (response?.success) {
-        // НЕ выключаем loading - он будет активен до окончания polling
         return response;
       } else {
         error.value = "Не удалось запустить анализ";
@@ -118,18 +117,18 @@ export const useAuditStore = defineStore("audit", () => {
   };
 
   const updateFromPolling = (auditData: AuditResource): void => {
-    performanceScore.value = auditData.scores.performance ?? null;
-    accessibilityScore.value = auditData.scores.accessibility ?? null;
-    bestPracticesScore.value = auditData.scores.best_practices ?? null;
-    seoScore.value = auditData.scores.seo ?? null;
+    performanceScore.value = auditData.performance ?? null;
+    accessibilityScore.value = auditData.accessibility ?? null;
+    bestPracticesScore.value = auditData.best_practices ?? null;
+    seoScore.value = auditData.seo ?? null;
 
-    lcp.value = auditData.core_web_vitals.lcp ?? null;
-    fid.value = auditData.core_web_vitals.fid ?? null;
-    cls.value = auditData.core_web_vitals.cls ?? null;
+    lcp.value = auditData.lcp ?? null;
+    fid.value = auditData.fid ?? null;
+    cls.value = auditData.cls ?? null;
 
-    fcp.value = auditData.additional_metrics.fcp ?? null;
-    tbt.value = auditData.additional_metrics.tbt ?? null;
-    speedIndex.value = auditData.additional_metrics.speed_index ?? null;
+    fcp.value = auditData.fcp ?? null;
+    tbt.value = auditData.tbt ?? null;
+    speedIndex.value = auditData.speed_index ?? null;
 
     isLighthouseLoading.value = false;
     error.value = null;

@@ -23,12 +23,10 @@ export interface PaginationMeta {
 
 export interface PaginatedResponse<T> {
   success: boolean;
-  data: {
-    data: T[];
-    current_page: number;
-    last_page: number;
-    total: number;
-  };
+  data: T[];
+  current_page: number;
+  last_page: number;
+  total: number;
 }
 
 export interface AuditDetailResponse {

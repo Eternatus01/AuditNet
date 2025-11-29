@@ -14,7 +14,7 @@
     </div>
 
     <EmptyState
-      v-else-if="audits.length === 0"
+      v-else-if="!audits || audits.length === 0"
       title="История аудитов пуста"
       description="Проведите первый аудит сайта"
     >
@@ -25,7 +25,7 @@
       </template>
     </EmptyState>
 
-    <div v-else class="audits-list">
+    <div v-else-if="audits && audits.length > 0" class="audits-list">
       <div
         v-for="audit in audits"
         :key="audit.id"
@@ -136,26 +136,24 @@ const error = ref<string>("");
 const fetchHistory = async (page = 1): Promise<void> => {
   isLoading.value = true;
   error.value = "";
+  audits.value = [];
 
   try {
     const response = await historyApi.fetchHistory(page);
 
-    if (response.success && response.data) {
-      audits.value = response.data.data;
+    if (response?.success && response.data) {
+      audits.value = Array.isArray(response.data) ? response.data : [];
+      
       pagination.value = {
-        current_page: response.data.current_page,
-        last_page: response.data.last_page,
-        total: response.data.total,
+        current_page: response.current_page,
+        last_page: response.last_page,
+        total: response.total,
       };
     } else {
       error.value = "Не удалось загрузить историю";
     }
   } catch (e: unknown) {
-    if (e instanceof Error) {
-      error.value = e.message;
-    } else {
-      error.value = "Ошибка при загрузке истории";
-    }
+    error.value = e instanceof Error ? e.message : "Ошибка при загрузке истории";
   } finally {
     isLoading.value = false;
   }

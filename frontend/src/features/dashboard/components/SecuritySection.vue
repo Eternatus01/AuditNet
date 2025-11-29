@@ -19,18 +19,10 @@
         <template #icon>
           <IconLucideLock />
         </template>
-        <div
-          v-for="(v, k) in securityAudit.headers"
-          :key="k"
-          class="security-item"
-        >
-          <span class="security-item-name">{{
-            formatHeaderName(k.toString())
-          }}</span>
+        <div v-for="(v, k) in securityAudit.headers" :key="k" class="security-item">
+          <span class="security-item-name">{{ formatHeaderName(k.toString()) }}</span>
           <span
-            :class="
-              v && v !== false ? 'security-badge ok' : 'security-badge bad'
-            "
+            :class="v && v !== false ? 'security-badge ok' : 'security-badge bad'"
             :aria-label="v && v !== false ? 'Присутствует' : 'Отсутствует'"
           >
             <IconLucideCheck v-if="v && v !== false" />
@@ -48,13 +40,9 @@
         <template #icon>
           <IconLucideFileText />
         </template>
-        <div
-          v-for="(v, k) in securityAudit.sensitive_files"
-          :key="k"
-          class="security-item"
-        >
+        <div v-for="(v, k) in securityAudit.sensitive_files" :key="k" class="security-item">
           <span class="security-item-name">{{ k }}</span>
-          <span 
+          <span
             :class="v ? 'security-badge bad' : 'security-badge ok'"
             :aria-label="v ? 'Найден (опасно)' : 'Не найден'"
           >
@@ -73,13 +61,9 @@
         <template #icon>
           <IconLucideFolder />
         </template>
-        <div
-          v-for="(v, k) in securityAudit.directory_listing"
-          :key="k"
-          class="security-item"
-        >
+        <div v-for="(v, k) in securityAudit.directory_listing" :key="k" class="security-item">
           <span class="security-item-name">{{ k }}</span>
-          <span 
+          <span
             :class="v ? 'security-badge bad' : 'security-badge ok'"
             :aria-label="v ? 'Включен (опасно)' : 'Выключен'"
           >
@@ -101,11 +85,7 @@
         <div class="security-item">
           <span class="security-item-name">robots.txt</span>
           <span
-            :class="
-              securityAudit.robots_txt
-                ? 'security-badge ok'
-                : 'security-badge warn'
-            "
+            :class="securityAudit.robots_txt ? 'security-badge ok' : 'security-badge warn'"
             :aria-label="securityAudit.robots_txt ? 'Найден' : 'Не найден'"
           >
             <IconLucideCheck v-if="securityAudit.robots_txt" />
@@ -115,11 +95,7 @@
         <div class="security-item">
           <span class="security-item-name">sitemap.xml</span>
           <span
-            :class="
-              securityAudit.sitemap_xml
-                ? 'security-badge ok'
-                : 'security-badge warn'
-            "
+            :class="securityAudit.sitemap_xml ? 'security-badge ok' : 'security-badge warn'"
             :aria-label="securityAudit.sitemap_xml ? 'Найден' : 'Не найден'"
           >
             <IconLucideCheck v-if="securityAudit.sitemap_xml" />
@@ -130,9 +106,7 @@
           <span class="security-item-name">Внешние JS</span>
           <span
             :class="
-              securityAudit.scripts_info?.length > 0
-                ? 'security-badge warn'
-                : 'security-badge ok'
+              securityAudit.scripts_info?.length > 0 ? 'security-badge warn' : 'security-badge ok'
             "
           >
             {{ securityAudit.scripts_info?.length || 0 }}
@@ -173,4 +147,3 @@ const onToggle = (_key: string) => {
   emit("toggle", _key);
 };
 </script>
-

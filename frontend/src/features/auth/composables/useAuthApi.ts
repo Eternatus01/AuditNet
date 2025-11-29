@@ -54,19 +54,39 @@ export const useAuthApi = () => {
     }
   };
 
-  const fetchProfile = async (): Promise<ProfileResponse> => {
+  const fetchProfile = async (): Promise<ProfileResponse | null> => {
     try {
-      const data = await apiClient<ProfileResponse>("/user", {
+      await getCsrfCookie();
+
+      const response = await apiClient<{ data: ProfileResponse } | ProfileResponse>("/user", {
         method: "GET",
       });
+      let userData: ProfileResponse | null = null;
 
-      if (!data.id) {
-        throw new Error("Профиль не найден");
+      if (response && typeof response === "object") {
+        if (
+          "data" in response &&
+          response.data &&
+          typeof response.data === "object" &&
+          "id" in response.data
+        ) {
+          userData = response.data as ProfileResponse;
+        } else if ("id" in response) {
+          userData = response as ProfileResponse;
+        }
       }
 
-      return data;
+      if (!userData?.id) {
+        return null;
+      }
+
+      return userData;
     } catch (error: unknown) {
-      return handleApiError(error, "Ошибка получения профиля");
+      if (isApiError(error) && error.response?.status === 401) {
+        return null;
+      }
+
+      return null;
     }
   };
 

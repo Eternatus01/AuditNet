@@ -29,8 +29,8 @@
 </template>
 
 <script setup lang="ts">
-import { IconButton } from '@/shared/ui/atoms';
-import IconLucideChevronDown from '~icons/lucide/chevron-down';
+import { IconButton } from "@/shared/ui/atoms";
+import IconLucideChevronDown from "~icons/lucide/chevron-down";
 import type { MetricStatus } from "../types";
 
 defineProps<{
@@ -44,7 +44,6 @@ defineProps<{
 }>();
 
 defineEmits<{
-  'toggle-info': [];
+  "toggle-info": [];
 }>();
 </script>
-

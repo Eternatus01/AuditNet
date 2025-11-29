@@ -88,7 +88,6 @@ const descriptions = useAuditDescriptions();
 const { expandedItems: expandedInfo, toggle: toggleInfo } = useToggle();
 
 const {
-  // Loading states
   isLighthouseLoading,
   isSecurityLoading,
   error,

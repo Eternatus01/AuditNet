@@ -11,7 +11,6 @@
 import { inject, type Ref } from "vue";
 import Header from "../shared/ui/organism/Header.vue";
 
-// Получаем состояние sidebar из Header
 const sidebarCollapsed = inject<Ref<boolean>>('sidebarCollapsed', { value: false } as Ref<boolean>);
 </script>
 

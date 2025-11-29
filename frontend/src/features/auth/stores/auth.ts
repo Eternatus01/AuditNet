@@ -67,7 +67,8 @@ export const useAuthStore = defineStore("auth", () => {
       const response = await authApi.fetchProfile();
       user.value = response ?? null;
       return response;
-    } catch {
+    } catch (error) {
+      // Ошибка уже обработана в useAuthApi, просто сбрасываем пользователя
       user.value = null;
       return null;
     } finally {

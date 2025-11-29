@@ -8,6 +8,7 @@ use App\Http\Requests\LoginUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -34,8 +35,7 @@ class AuthController extends Controller
         try {
             $credentials = $request->only(['email', 'password']);
 
-            // Используем session-based аутентификацию
-            if(!Auth::attempt($credentials, true)){  // true = remember me
+            if(!Auth::attempt($credentials, true)){
                 return response()->json([
                     'message' => 'Неверное имя пользователя или пароль'
                 ], 401);
@@ -50,6 +50,11 @@ class AuthController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            Log::error('Login error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
             return response()->json([
                 'message' => 'Ошибка при попытке входа. Попробуйте позднее.',
                 'debug' => config('app.debug') ? $e->getMessage() : null,
@@ -59,13 +64,10 @@ class AuthController extends Controller
 
     public function logout(){
         try {
-            // Выходим из session
             Auth::guard('web')->logout();
             
-            // Инвалидируем текущую сессию
             request()->session()->invalidate();
             
-            // Регенерируем CSRF токен
             request()->session()->regenerateToken();
     
             return response()->json([

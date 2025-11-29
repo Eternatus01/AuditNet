@@ -20,7 +20,7 @@
       {{ description }}
     </div>
     <div class="score-value">
-      <span class="score-number">{{ score ?? '--' }}</span>
+      <span class="score-number">{{ score ?? "--" }}</span>
       <span class="score-label">/ 100</span>
     </div>
     <div class="score-progress">
@@ -30,8 +30,8 @@
 </template>
 
 <script setup lang="ts">
-import { IconButton } from '@/shared/ui/atoms';
-import IconLucideChevronDown from '~icons/lucide/chevron-down';
+import { IconButton } from "@/shared/ui/atoms";
+import IconLucideChevronDown from "~icons/lucide/chevron-down";
 import type { ScoreDisplay } from "../types";
 
 defineProps<{
@@ -43,7 +43,6 @@ defineProps<{
 }>();
 
 defineEmits<{
-  'toggle-info': [];
+  "toggle-info": [];
 }>();
 </script>
-

@@ -1,20 +1,10 @@
 <template>
   <section class="auth-container">
-    <Form
-      :validation-schema="registerSchema"
-      class="auth-form"
-      @submit="onSubmit"
-    >
+    <Form :validation-schema="registerSchema" class="auth-form" @submit="onSubmit">
       <h2>Регистрация</h2>
 
       <div class="form-fields">
-        <InputField
-          name="name"
-          type="text"
-          placeholder="Имя"
-          autocomplete="name"
-          label="Имя"
-        />
+        <InputField name="name" type="text" placeholder="Имя" autocomplete="name" label="Имя" />
 
         <InputField
           name="email"
@@ -33,13 +23,7 @@
         />
       </div>
 
-      <Button
-        type="submit"
-        variant="primary"
-        size="lg"
-        :loading="isLoading"
-        full-width
-      >
+      <Button type="submit" variant="primary" size="lg" :loading="isLoading" full-width>
         Создать аккаунт
       </Button>
 
@@ -49,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import { storeToRefs } from "pinia";
 import { Form } from "vee-validate";
 import { useAuthStore } from "../stores/auth";
@@ -61,24 +45,20 @@ import { registerSchema } from "@/shared/validation/schemas";
 
 const router = useRouter();
 const authStore = useAuthStore();
-
-// ✅ Используем storeToRefs для получения реактивного error из store
 const { error } = storeToRefs(authStore);
-
-// Локальное состояние компонента
 const isLoading = ref<boolean>(false);
 
 const onSubmit = async (values: unknown): Promise<void> => {
   isLoading.value = true;
-  
+
   try {
     const credentials = values as SignUpCredentials;
     const response = await authStore.signUp(credentials);
-    
+
     if (response) {
       await router.push({ name: "home" });
     }
-  } catch (err: unknown) {
+  } catch {
     // Ошибка уже обработана в store
   } finally {
     isLoading.value = false;
@@ -93,4 +73,3 @@ const onSubmit = async (values: unknown): Promise<void> => {
   gap: 1rem;
 }
 </style>
-

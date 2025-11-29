@@ -14,56 +14,56 @@
     <!-- Score Cards Grid -->
     <div class="scores-grid">
       <ScoreCard
-      title="Performance"
-      :score="performanceScore"
-      icon-class="performance"
-      :description="descriptions.scores.performance"
-      :is-expanded="isExpanded('performance')"
-      @toggle-info="onToggle('performance')"
-    >
-      <template #icon>
-        <IconLucideActivity />
-      </template>
-    </ScoreCard>
+        title="Performance"
+        :score="performanceScore"
+        icon-class="performance"
+        :description="descriptions.scores.performance"
+        :is-expanded="isExpanded('performance')"
+        @toggle-info="onToggle('performance')"
+      >
+        <template #icon>
+          <IconLucideActivity />
+        </template>
+      </ScoreCard>
 
-    <ScoreCard
-      title="Accessibility"
-      :score="accessibilityScore"
-      icon-class="accessibility"
-      :description="descriptions.scores.accessibility"
-      :is-expanded="isExpanded('accessibility')"
-      @toggle-info="onToggle('accessibility')"
-    >
-      <template #icon>
-        <IconLucideUsers />
-      </template>
-    </ScoreCard>
+      <ScoreCard
+        title="Accessibility"
+        :score="accessibilityScore"
+        icon-class="accessibility"
+        :description="descriptions.scores.accessibility"
+        :is-expanded="isExpanded('accessibility')"
+        @toggle-info="onToggle('accessibility')"
+      >
+        <template #icon>
+          <IconLucideUsers />
+        </template>
+      </ScoreCard>
 
-    <ScoreCard
-      title="Best Practices"
-      :score="bestPracticesScore"
-      icon-class="best-practices"
-      :description="descriptions.scores.bestPractices"
-      :is-expanded="isExpanded('best-practices')"
-      @toggle-info="onToggle('best-practices')"
-    >
-      <template #icon>
-        <IconLucideCheckCircle />
-      </template>
-    </ScoreCard>
+      <ScoreCard
+        title="Best Practices"
+        :score="bestPracticesScore"
+        icon-class="best-practices"
+        :description="descriptions.scores.bestPractices"
+        :is-expanded="isExpanded('best-practices')"
+        @toggle-info="onToggle('best-practices')"
+      >
+        <template #icon>
+          <IconLucideCheckCircle />
+        </template>
+      </ScoreCard>
 
-    <ScoreCard
-      title="SEO"
-      :score="seoScore"
-      icon-class="best-practices"
-      :description="descriptions.scores.seo"
-      :is-expanded="isExpanded('seo')"
-      @toggle-info="onToggle('seo')"
-    >
-      <template #icon>
-        <IconLucideSearch />
-      </template>
-    </ScoreCard>
+      <ScoreCard
+        title="SEO"
+        :score="seoScore"
+        icon-class="best-practices"
+        :description="descriptions.scores.seo"
+        :is-expanded="isExpanded('seo')"
+        @toggle-info="onToggle('seo')"
+      >
+        <template #icon>
+          <IconLucideSearch />
+        </template>
+      </ScoreCard>
     </div>
   </div>
 </template>
@@ -117,16 +117,18 @@ const onToggle = (_key: string) => {
 }
 
 .scores-chart-wrapper::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(100, 108, 255, 0.5) 50%, 
-    transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(100, 108, 255, 0.5) 50%,
+    transparent 100%
+  );
 }
 
 .chart-title {
@@ -152,7 +154,7 @@ const onToggle = (_key: string) => {
   .scores-chart-wrapper {
     padding: 2rem 1.5rem;
   }
-  
+
   .chart-title {
     font-size: 1.5rem;
   }
@@ -162,19 +164,18 @@ const onToggle = (_key: string) => {
   .scores-section {
     gap: 2rem;
   }
-  
+
   .scores-chart-wrapper {
     padding: 1.5rem 1rem;
     border-radius: 12px;
   }
-  
+
   .chart-title {
     font-size: 1.35rem;
   }
-  
+
   .scores-grid {
     grid-template-columns: 1fr;
   }
 }
 </style>
-

@@ -1,10 +1,6 @@
 import { apiClient } from "@/shared/utils/apiClient";
 import { handleApiError, isApiError } from "@/shared/utils/errorHandling";
-import type {
-  AnalyzeWebsiteResponse,
-  SecurityAuditResponse,
-  AuditStatusResponse,
-} from "../types";
+import type { AnalyzeWebsiteResponse, SecurityAuditResponse, AuditStatusResponse } from "../types";
 
 export const useAuditApi = () => {
   const analyzeWebsite = async (websiteUrl: string): Promise<AnalyzeWebsiteResponse> => {

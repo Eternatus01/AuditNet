@@ -1,10 +1,6 @@
 <template>
   <section class="auth-container">
-    <Form
-      :validation-schema="loginSchema"
-      class="auth-form"
-      @submit="onSubmit"
-    >
+    <Form :validation-schema="loginSchema" class="auth-form" @submit="onSubmit">
       <h2>Вход в систему</h2>
 
       <div class="form-fields">
@@ -25,13 +21,7 @@
         />
       </div>
 
-      <Button
-        type="submit"
-        variant="primary"
-        size="lg"
-        :loading="isLoading"
-        full-width
-      >
+      <Button type="submit" variant="primary" size="lg" :loading="isLoading" full-width>
         Войти
       </Button>
 
@@ -41,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import { storeToRefs } from "pinia";
 import { Form } from "vee-validate";
 import { useAuthStore } from "../stores/auth";
@@ -53,24 +43,20 @@ import { loginSchema } from "@/shared/validation/schemas";
 
 const router = useRouter();
 const authStore = useAuthStore();
-
-// ✅ Используем storeToRefs для получения реактивного error из store
 const { error } = storeToRefs(authStore);
-
-// Локальное состояние компонента
 const isLoading = ref<boolean>(false);
 
 const onSubmit = async (values: unknown): Promise<void> => {
   isLoading.value = true;
-  
+
   try {
     const credentials = values as SignInCredentials;
     const response = await authStore.signIn(credentials);
-    
+
     if (response) {
       await router.push({ name: "home" });
     }
-  } catch (err: unknown) {
+  } catch {
     // Ошибка уже обработана в store
   } finally {
     isLoading.value = false;
@@ -85,4 +71,3 @@ const onSubmit = async (values: unknown): Promise<void> => {
   gap: 1rem;
 }
 </style>
-

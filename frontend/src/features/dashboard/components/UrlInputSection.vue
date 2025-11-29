@@ -34,8 +34,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import { useDebounce } from '@/shared/composables/useDebounce';
+import { ref, watch } from "vue";
+import { useDebounce } from "@/shared/composables/useDebounce";
 import IconLucideLink from "~icons/lucide/link";
 import IconLucideArrowRight from "~icons/lucide/arrow-right";
 import IconLucideLoader2 from "~icons/lucide/loader-2";
@@ -46,15 +46,14 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  'update:modelValue': [value: string];
-  'analyze': [];
+  "update:modelValue": [value: string];
+  analyze: [];
 }>();
 
 const localValue = ref(props.modelValue);
 const validationError = ref<string | null>(null);
 const isValid = ref(false);
 
-// Debounced валидация URL (задержка 500ms)
 const debouncedValue = useDebounce(localValue, 500);
 
 const validateUrl = (url: string): { valid: boolean; error: string | null } => {
@@ -62,31 +61,28 @@ const validateUrl = (url: string): { valid: boolean; error: string | null } => {
     return { valid: false, error: null };
   }
 
-  // Проверка на базовый формат URL
   try {
     const urlObj = new URL(url);
-    
-    // Проверка протокола
-    if (!['http:', 'https:'].includes(urlObj.protocol)) {
-      return { 
-        valid: false, 
-        error: 'URL должен начинаться с http:// или https://' 
+
+    if (!["http:", "https:"].includes(urlObj.protocol)) {
+      return {
+        valid: false,
+        error: "URL должен начинаться с http:// или https://",
       };
     }
 
-    // Проверка на наличие домена
     if (!urlObj.hostname || urlObj.hostname.length < 3) {
-      return { 
-        valid: false, 
-        error: 'Укажите корректный домен' 
+      return {
+        valid: false,
+        error: "Укажите корректный домен",
       };
     }
 
     return { valid: true, error: null };
   } catch {
-    return { 
-      valid: false, 
-      error: 'Некорректный формат URL. Пример: https://example.com' 
+    return {
+      valid: false,
+      error: "Некорректный формат URL. Пример: https://example.com",
     };
   }
 };
@@ -94,16 +90,14 @@ const validateUrl = (url: string): { valid: boolean; error: string | null } => {
 const handleInput = (event: InputEvent) => {
   const value = (event.target as HTMLInputElement).value;
   localValue.value = value;
-  emit('update:modelValue', value);
-  
-  // Сбрасываем валидацию при вводе
+  emit("update:modelValue", value);
+
   if (!value) {
     validationError.value = null;
     isValid.value = false;
   }
 };
 
-// Валидация с debounce
 watch(debouncedValue, (newValue) => {
   const result = validateUrl(newValue);
   validationError.value = result.error;
@@ -137,7 +131,6 @@ watch(debouncedValue, (newValue) => {
   border-radius: 4px;
 }
 
-/* Transition для сообщения об ошибке */
 .fade-enter-active,
 .fade-leave-active {
   transition: all 0.3s ease;
@@ -153,4 +146,3 @@ watch(debouncedValue, (newValue) => {
   transform: translateY(-10px);
 }
 </style>
-
