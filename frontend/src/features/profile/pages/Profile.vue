@@ -65,10 +65,8 @@ import { useAuthStore } from "@/features/auth/stores/auth";
 
 const authStore = useAuthStore();
 
-// ✅ Получаем user через storeToRefs
 const { user } = storeToRefs(authStore);
 
-// ✅ Computed для доступа к вложенным свойствам (это нормально)
 const name = computed<string | undefined>(() => user.value?.name);
 const id = computed<number | undefined>(() => user.value?.id);
 const email = computed<string | undefined>(() => user.value?.email);

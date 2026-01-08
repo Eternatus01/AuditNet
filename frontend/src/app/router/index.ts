@@ -1,7 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import { useAuthStore } from "@/features/auth/stores/auth";
-import { watch } from "vue";
-import { logger } from "@/shared/utils/logger";
 
 // Lazy loading для всех роутов
 const routes: RouteRecordRaw[] = [
@@ -58,38 +56,20 @@ const router = createRouter({
   routes,
 });
 
-let profileFetchInitiated = false;
-
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
-  const AUTH_TIMEOUT_MS = 5000;
-  
-  if (!authStore.isAuthenticated && !authStore.isProfileLoading && !profileFetchInitiated) {
-    profileFetchInitiated = true;
-    authStore.fetchProfile();
-  }
-  
+
   if (authStore.isProfileLoading) {
     await new Promise<void>((resolve) => {
-      let unwatch: (() => void) | null = null;
+      const maxWaitTime = 3000;
+      const startTime = Date.now();
       
-      const timeoutId = setTimeout(() => {
-        if (unwatch) unwatch();
-        logger.warn("Auth profile loading timeout");
-        resolve();
-      }, AUTH_TIMEOUT_MS);
-
-      unwatch = watch(
-        () => authStore.isProfileLoading,
-        (isLoading) => {
-          if (!isLoading) {
-            clearTimeout(timeoutId);
-            if (unwatch) unwatch();
-            resolve();
-          }
-        },
-        { immediate: true }
-      );
+      const checkInterval = setInterval(() => {
+        if (!authStore.isProfileLoading || Date.now() - startTime > maxWaitTime) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 50);
     });
   }
 

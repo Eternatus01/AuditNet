@@ -2,16 +2,12 @@
 
 namespace App\Models;
 
+use App\Enums\AuditStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Audit extends Model
 {
-    public const STATUS_PENDING = 'pending';
-    public const STATUS_PROCESSING = 'processing';
-    public const STATUS_COMPLETED = 'completed';
-    public const STATUS_FAILED = 'failed';
-
     protected $fillable = [
         'user_id',
         'url',
@@ -31,6 +27,7 @@ class Audit extends Model
     ];
 
     protected $casts = [
+        'status' => AuditStatus::class,
         'performance' => 'integer',
         'accessibility' => 'integer',
         'best_practices' => 'integer',

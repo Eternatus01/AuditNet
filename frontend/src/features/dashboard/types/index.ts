@@ -70,12 +70,14 @@ export interface ScriptInfo {
 }
 
 export interface SecurityAudit {
+  checked_url: string;
+  host: string;
   headers: SecurityHeaders;
   sensitive_files: SensitiveFiles;
   directory_listing: DirectoryListing;
-  robots_txt: boolean;
+  robots_txt: string | null;
   sitemap_xml: boolean;
-  scripts_info: ScriptInfo[];
+  scripts_info: string[];
 }
 
 export interface AnalyzeWebsiteResponse {

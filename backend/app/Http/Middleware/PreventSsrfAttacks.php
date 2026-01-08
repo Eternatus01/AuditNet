@@ -95,7 +95,7 @@ class PreventSsrfAttacks
     protected function ipInRange(string $ip, string $range): bool
     {
         if (strpos($range, ':') !== false) {
-            return false;
+            return $this->ipv6InRange($ip, $range);
         }
 
         if (strpos($range, '/') === false) {
@@ -105,10 +105,50 @@ class PreventSsrfAttacks
         [$subnet, $bits] = explode('/', $range);
         $ip = ip2long($ip);
         $subnet = ip2long($subnet);
+        
+        if ($ip === false || $subnet === false) {
+            return false;
+        }
+        
         $mask = -1 << (32 - (int)$bits);
         $subnet &= $mask;
 
         return ($ip & $mask) === $subnet;
+    }
+
+    protected function ipv6InRange(string $ip, string $range): bool
+    {
+        if (strpos($range, '/') === false) {
+            return $ip === $range;
+        }
+
+        [$subnet, $bits] = explode('/', $range);
+        
+        $ip = inet_pton($ip);
+        $subnet = inet_pton($subnet);
+        
+        if ($ip === false || $subnet === false) {
+            return false;
+        }
+        
+        $bitsInt = (int)$bits;
+        $bytesToCheck = (int)($bitsInt / 8);
+        $bitsInLastByte = $bitsInt % 8;
+        
+        for ($i = 0; $i < $bytesToCheck; $i++) {
+            if ($ip[$i] !== $subnet[$i]) {
+                return false;
+            }
+        }
+        
+        if ($bitsInLastByte > 0) {
+            $mask = 0xFF << (8 - $bitsInLastByte);
+            if ((ord($ip[$bytesToCheck]) & $mask) !== (ord($subnet[$bytesToCheck]) & $mask)) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 }
 

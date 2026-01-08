@@ -23,25 +23,56 @@ export const useAuditApi = () => {
   };
 
   const fetchSecurityAudit = async (websiteUrl: string): Promise<SecurityAuditResponse> => {
-    try {
-      const response = await apiClient<SecurityAuditResponse>("/audit/security-audit", {
-        method: "POST",
-        data: {
-          url: websiteUrl.trim(),
-        },
-      });
+    const MAX_RETRIES = 10;
+    const RETRY_DELAY = 5000;
+    
+    const initialResponse = await apiClient<any>("/audit/security-audit", {
+      method: "POST",
+      data: {
+        url: websiteUrl.trim(),
+      },
+    });
 
-      if (response.error) {
-        throw new Error(response.error || "Ошибка аудита безопасности");
-      }
+    if (initialResponse?.data?.status === 'processing' && initialResponse?.data?.cache_key) {
+      const cacheKey = initialResponse.data.cache_key;
+      
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+        
+        try {
+          const checkResponse = await apiClient<any>("/audit/security-audit", {
+            method: "POST",
+            data: {
+              url: websiteUrl.trim(),
+            },
+          });
 
-      return response;
-    } catch (error: unknown) {
-      if (isApiError(error)) {
-        throw new Error(error.response?.data?.error || error.message || "Ошибка сети");
+          if (checkResponse?.data && !checkResponse.data.status) {
+            return checkResponse.data as SecurityAuditResponse;
+          }
+
+          if (checkResponse?.error || checkResponse?.data?.error) {
+            throw new Error(checkResponse.error || checkResponse.data.error || "Ошибка аудита безопасности");
+          }
+        } catch (error: unknown) {
+          if (attempt === MAX_RETRIES - 1) {
+            throw error;
+          }
+        }
       }
-      throw new Error("Ошибка сети");
+      
+      throw new Error("Превышено время ожидания результатов security audit");
     }
+
+    if (initialResponse?.data && !initialResponse.data.status) {
+      return initialResponse.data as SecurityAuditResponse;
+    }
+
+    if (initialResponse?.error) {
+      throw new Error(initialResponse.error || "Ошибка аудита безопасности");
+    }
+
+    throw new Error("Не удалось получить результаты security audit");
   };
 
   const checkAuditStatus = async (auditId: number): Promise<AuditStatusResponse> => {

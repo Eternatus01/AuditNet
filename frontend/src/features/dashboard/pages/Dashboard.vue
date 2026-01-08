@@ -20,7 +20,6 @@
       @analyze="analyzeWebsite"
     />
 
-    <!-- Индикатор загрузки во время анализа -->
     <div v-if="isLoading && !isAuditReady" class="loading-indicator">
       <div class="loading-spinner"></div>
       <h3>Анализ выполняется...</h3>
@@ -69,8 +68,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onBeforeUnmount } from "vue";
+import { computed, ref, onBeforeUnmount, onMounted } from "vue";
 import { storeToRefs } from "pinia";
+import { useRoute } from "vue-router";
 import { useAuditStore } from "../stores/audit";
 import { useAuditDescriptions } from "../composables/useAuditDescriptions";
 import { useToggle } from "@/shared/composables/useToggle";
@@ -80,9 +80,10 @@ import ScoresSection from "../components/ScoresSection.vue";
 import CoreWebVitalsSection from "../components/CoreWebVitalsSection.vue";
 import SecuritySection from "../components/SecuritySection.vue";
 
-const POLLING_INTERVAL_MS = 3000;
-const MAX_POLLING_ATTEMPTS = 60;
+const POLLING_INTERVAL_MS = 10000;
+const MAX_POLLING_ATTEMPTS = 30;
 
+const route = useRoute();
 const auditStore = useAuditStore();
 const descriptions = useAuditDescriptions();
 const { expandedItems: expandedInfo, toggle: toggleInfo } = useToggle();
@@ -192,6 +193,22 @@ const startPolling = (auditId: number) => {
     }
   }, POLLING_INTERVAL_MS);
 };
+
+onMounted(() => {
+  const urlParam = route.query.url as string;
+  const autoStart = route.query.autoStart as string;
+  
+  if (urlParam) {
+    websiteUrl.value = urlParam;
+    
+    if (autoStart === 'true') {
+      logger.log('🚀 Автоматический запуск проверки для URL:', urlParam);
+      setTimeout(() => {
+        analyzeWebsite();
+      }, 500);
+    }
+  }
+});
 
 onBeforeUnmount(() => {
   clearPolling();

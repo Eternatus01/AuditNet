@@ -8,13 +8,23 @@
 
     <div v-else-if="audit" class="hd-content">
       <header class="hd-header">
-        <Button variant="secondary" size="md" @click="goBack">
-          <template #icon-left>
-            <IconLucideArrowLeft />
-          </template>
-          Назад к истории
-        </Button>
+        <div class="hd-header-left">
+          <Button variant="secondary" size="md" @click="goBack">
+            <template #icon-left>
+              <IconLucideArrowLeft />
+            </template>
+            Назад к истории
+          </Button>
+        </div>
         <h1 class="hd-title">Детали аудита</h1>
+        <div class="hd-header-right">
+          <Button variant="primary" size="md" @click="repeatAudit">
+            <template #icon-left>
+              <IconLucideRefreshCw />
+            </template>
+            Повторить проверку
+          </Button>
+        </div>
       </header>
 
       <section class="hd-meta">
@@ -72,6 +82,7 @@ import type { Audit } from "../types";
 import ScoresSection from "@/features/dashboard/components/ScoresSection.vue";
 import CoreWebVitalsSection from "@/features/dashboard/components/CoreWebVitalsSection.vue";
 import IconLucideArrowLeft from "~icons/lucide/arrow-left";
+import IconLucideRefreshCw from "~icons/lucide/refresh-cw";
 
 const router = useRouter();
 const route = useRoute();
@@ -122,6 +133,15 @@ const goBack = (): void => {
   router.push({ name: "history" });
 };
 
+const repeatAudit = (): void => {
+  if (audit.value?.url) {
+    router.push({ 
+      name: "dashboard", 
+      query: { url: audit.value.url, autoStart: 'true' } 
+    });
+  }
+};
+
 onMounted(() => {
   const id = route.params.id as string;
   if (id) {
@@ -153,10 +173,20 @@ onMounted(() => {
 }
 
 .hd-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hd-header-left,
+.hd-header-right {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+}
+
+.hd-title {
+  text-align: center;
 }
 
 .hd-title {
@@ -207,8 +237,22 @@ onMounted(() => {
   }
 
   .hd-header {
-    flex-direction: column;
-    align-items: flex-start;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .hd-header-left {
+    order: 1;
+  }
+
+  .hd-title {
+    order: 2;
+    text-align: left;
+    font-size: 1.5rem;
+  }
+
+  .hd-header-right {
+    order: 3;
   }
 }
 </style>

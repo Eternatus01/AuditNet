@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
-use App\Models\Audit;
-use App\Models\User;
-use App\Services\AuditService;
+use App\Enums\AuditStatus;
+use App\Repositories\AuditRepository;
+use App\Services\Audit\AuditService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -26,37 +26,31 @@ class AnalyzeWebsiteJob implements ShouldQueue
         public int $auditId,
     ) {}
 
-    public function handle(AuditService $auditService): void
+    public function handle(AuditService $auditService, AuditRepository $auditRepository): void
     {
-        $user = User::find($this->userId);
-        $audit = Audit::find($this->auditId);
+        $audit = $auditRepository->findById($this->auditId);
 
-        if (!$user || !$audit) {
-            Log::error('User or Audit not found for job', [
-                'userId' => $this->userId,
-                'auditId' => $this->auditId
-            ]);
+        if (!$audit) {
+            Log::error('Audit not found for job', ['auditId' => $this->auditId]);
             return;
         }
 
         try {
-            $audit->update(['status' => 'processing']);
+            $auditRepository->updateAuditStatus($this->auditId, AuditStatus::PROCESSING);
 
-            $results = $auditService->runLighthouseForJob($this->url);
+            $result = $auditService->performAuditForJob($this->url);
 
-            $audit->update([
-                'status' => 'completed',
-                'performance' => $results['performance'],
-                'accessibility' => $results['accessibility'],
-                'best_practices' => $results['bestPractices'],
-                'seo' => $results['seo'],
-                'lcp' => $results['lcp'],
-                'fid' => $results['fid'],
-                'cls' => $results['cls'],
-                'fcp' => $results['fcp'],
-                'tbt' => $results['tbt'],
-                'speed_index' => $results['speedIndex'],
-                'audited_at' => now(),
+            $auditRepository->updateAuditWithResults($this->auditId, [
+                'performance' => $result->performance,
+                'accessibility' => $result->accessibility,
+                'bestPractices' => $result->bestPractices,
+                'seo' => $result->seo,
+                'lcp' => $result->lcp,
+                'fid' => $result->fid,
+                'cls' => $result->cls,
+                'fcp' => $result->fcp,
+                'tbt' => $result->tbt,
+                'speedIndex' => $result->speedIndex,
             ]);
 
             Log::info('Audit completed successfully', [
@@ -65,10 +59,7 @@ class AnalyzeWebsiteJob implements ShouldQueue
             ]);
 
         } catch (\Exception $e) {
-            $audit->update([
-                'status' => 'failed',
-                'error_message' => $e->getMessage()
-            ]);
+            $auditRepository->markAuditAsFailed($this->auditId, $e->getMessage());
 
             Log::error('Audit job failed', [
                 'auditId' => $this->auditId,
@@ -82,14 +73,12 @@ class AnalyzeWebsiteJob implements ShouldQueue
 
     public function failed(\Throwable $exception): void
     {
-        $audit = Audit::find($this->auditId);
+        $auditRepository = app(AuditRepository::class);
         
-        if ($audit) {
-            $audit->update([
-                'status' => 'failed',
-                'error_message' => 'Не удалось выполнить анализ после нескольких попыток: ' . $exception->getMessage()
-            ]);
-        }
+        $auditRepository->markAuditAsFailed(
+            $this->auditId,
+            'Не удалось выполнить анализ после нескольких попыток: ' . $exception->getMessage()
+        );
 
         Log::error('Audit job failed permanently', [
             'auditId' => $this->auditId,
@@ -99,4 +88,5 @@ class AnalyzeWebsiteJob implements ShouldQueue
         ]);
     }
 }
+
 

@@ -23,10 +23,10 @@
       <GaugeChart
         metric-name="LCP"
         :value="lcp"
-        :good-threshold="2500"
-        :poor-threshold="4000"
+        :good-threshold="2.5"
+        :poor-threshold="4.0"
         unit="s"
-        :formatter="(val) => (val / 1000).toFixed(2)"
+        :formatter="(val) => val?.toFixed(2) || 'N/A'"
       />
       <GaugeChart
         metric-name="FID"
@@ -34,14 +34,14 @@
         :good-threshold="100"
         :poor-threshold="300"
         unit="ms"
-        :formatter="(val) => val.toFixed(0)"
+        :formatter="(val) => val?.toFixed(0) || 'N/A'"
       />
       <GaugeChart
         metric-name="CLS"
         :value="cls"
         :good-threshold="0.1"
         :poor-threshold="0.25"
-        :formatter="(val) => val.toFixed(3)"
+        :formatter="(val) => val?.toFixed(3) || 'N/A'"
       />
     </div>
 
