@@ -25,13 +25,17 @@ class AuditController extends BaseApiController
             $url = $request->input('url');
             $user = $this->requireAuthenticatedUser();
 
+            Log::info('Starting audit', ['url' => $url, 'user_id' => $user->id]);
+
             $audit = $this->auditRepository->createPendingAudit($url, $user->id);
 
             // Выполняем анализ синхронно (для бесплатного плана Render без queue worker)
             try {
                 $this->auditRepository->updateAuditStatus($audit->id, AuditStatus::PROCESSING);
 
+                Log::info('Calling Lighthouse service', ['audit_id' => $audit->id]);
                 $result = $this->auditService->performAuditForJob($url);
+                Log::info('Lighthouse service completed', ['audit_id' => $audit->id]);
 
                 $this->auditRepository->updateAuditWithResults($audit->id, [
                     'performance' => $result->performance,
