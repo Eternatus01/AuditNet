@@ -12,13 +12,13 @@ class LighthouseApiClient
 
     public function __construct()
     {
-        $this->serviceUrl = env('LIGHTHOUSE_SERVICE_URL', 'http://lighthouse:3000');
+        $this->serviceUrl = env('LIGHTHOUSE_SERVICE_URL', env('LIGHTHOUSE_URL', 'http://lighthouse:3000'));
     }
 
     public function analyze(string $url): array
     {
         try {
-            $response = Http::timeout(120)->post($this->serviceUrl, ['url' => $url]);
+            $response = Http::timeout(180)->post($this->serviceUrl, ['url' => $url]);
         } catch (Exception $e) {
             Log::error('Ошибка соединения с Lighthouse сервисом', [
                 'lighthouse_url' => $this->serviceUrl,

@@ -35,7 +35,7 @@ class SecurityAuditService
     private function checkSecurityHeaders(string $url): array
     {
         try {
-            $resp = Http::timeout(10)->get($url);
+            $resp = Http::timeout(30)->get($url);
             $headers = collect($resp->headers())->mapWithKeys(function ($v, $k) {
                 return [strtolower($k) => implode('; ', $v)];
             })->toArray();
@@ -69,7 +69,7 @@ class SecurityAuditService
     private function analyzeScripts(string $url): array
     {
         try {
-            $resp = Http::timeout(10)->get($url);
+            $resp = Http::timeout(30)->get($url);
             if (preg_match_all('#<script[^>]+src="([^"]+)"#i', $resp->body(), $matches)) {
                 return $matches[1];
             }
@@ -85,10 +85,10 @@ class SecurityAuditService
         $dirs = ['/uploads/', '/files/', '/backup/', '/images/', '/admin/'];
 
         $responses = Http::pool(fn ($pool) => [
-            ...array_map(fn($path) => $pool->timeout(5)->get($url . $path), $sensitivePaths),
-            ...array_map(fn($dir) => $pool->timeout(5)->get($url . $dir), $dirs),
-            $pool->timeout(5)->get($url . '/robots.txt'),
-            $pool->timeout(5)->get($url . '/sitemap.xml'),
+            ...array_map(fn($path) => $pool->timeout(15)->get($url . $path), $sensitivePaths),
+            ...array_map(fn($dir) => $pool->timeout(15)->get($url . $dir), $dirs),
+            $pool->timeout(15)->get($url . '/robots.txt'),
+            $pool->timeout(15)->get($url . '/sitemap.xml'),
         ]);
 
         $sensitiveFiles = [];

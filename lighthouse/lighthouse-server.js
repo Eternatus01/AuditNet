@@ -15,15 +15,22 @@ async function runLighthouse(url) {
     output: "json",
     onlyCategories: ["performance", "accessibility", "best-practices", "seo"],
     port: chrome.port,
+    maxWaitForLoad: 45000,
+    maxWaitForFcp: 30000,
   };
 
-  const runnerResult = await lighthouse(url, options);
-  await chrome.kill();
-
-  return runnerResult.lhr;
+  try {
+    const runnerResult = await lighthouse(url, options);
+    return runnerResult.lhr;
+  } finally {
+    await chrome.kill();
+  }
 }
 
 const server = http.createServer(async (req, res) => {
+  req.setTimeout(180000); // 3 минуты
+  res.setTimeout(180000);
+  
   // Разрешаем CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
