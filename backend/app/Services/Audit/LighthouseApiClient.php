@@ -12,7 +12,7 @@ class LighthouseApiClient
 
     public function __construct()
     {
-        $this->serviceUrl = env('LIGHTHOUSE_SERVICE_URL', env('LIGHTHOUSE_URL', 'http://lighthouse:3000'));
+        image.png        $this->serviceUrl = env('LIGHTHOUSE_SERVICE_URL', env('LIGHTHOUSE_URL', 'http://lighthouse:3000'));
     }
 
     public function analyze(string $url): array

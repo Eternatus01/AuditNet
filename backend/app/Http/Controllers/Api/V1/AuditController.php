@@ -28,7 +28,7 @@ class AuditController extends BaseApiController
 
             return $this->successResponse(
                 [
-                    'audit_id' => $audit->id,
+                    'id' => $audit->id,
                     'status' => $audit->status->value,
                     'url' => $url,
                 ],

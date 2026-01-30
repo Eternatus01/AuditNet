@@ -8,14 +8,14 @@ export const useAuditApi = () => {
       const MAX_RETRIES = 60; // 60 попыток = 5 минут
       const RETRY_DELAY = 5000; // 5 секунд
       
-      const response = await apiClient<AnalyzeWebsiteResponse>("/audit/analyze", {
+      const response = await apiClient<{ data: any }>("/audit/analyze", {
         method: "POST",
         data: {
           url: websiteUrl.trim(),
         },
       });
 
-      // Если аудит создан и ожидает выполнения
+      // Backend возвращает { id, status: "pending", url }
       if (response?.success && response?.data?.id) {
         const auditId = response.data.id;
         
@@ -28,15 +28,16 @@ export const useAuditApi = () => {
               method: "GET",
             });
 
-            if (statusResponse?.data?.status === 'completed' && statusResponse?.data?.result) {
+            // Проверяем статус аудита
+            if (statusResponse?.data?.data?.status === 'completed') {
               return {
                 success: true,
-                data: statusResponse.data.result
+                data: statusResponse.data.data
               };
             }
 
-            if (statusResponse?.data?.status === 'failed') {
-              throw new Error(statusResponse.data.error_message || "Аудит завершился с ошибкой");
+            if (statusResponse?.data?.data?.status === 'failed') {
+              throw new Error(statusResponse.data.data.error_message || "Аудит завершился с ошибкой");
             }
           } catch (error: unknown) {
             if (attempt === MAX_RETRIES - 1) {
@@ -48,11 +49,7 @@ export const useAuditApi = () => {
         throw new Error("Превышено время ожидания результатов аудита");
       }
 
-      if (response?.success && response?.data) {
-        return response;
-      } else {
-        throw new Error("Не удалось получить результаты анализа");
-      }
+      throw new Error("Не удалось получить результаты анализа");
     } catch (error: unknown) {
       return handleApiError(error, "Ошибка при анализе сайта");
     }
