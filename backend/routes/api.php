@@ -7,6 +7,13 @@ use App\Http\Controllers\Api\V1\AuditController;
 use App\Http\Controllers\Api\V1\SecurityController;
 use App\Http\Resources\UserResource;
 
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'timestamp' => now()->toIso8601String()
+    ]);
+});
+
 Route::get('/user', function (Request $request) {
     $user = $request->user();
     

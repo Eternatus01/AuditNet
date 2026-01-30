@@ -1,0 +1,89 @@
+services:
+  # База данных PostgreSQL
+  - type: pserv
+    name: auditnet-db
+    env: docker
+    plan: free
+    
+  # Backend Laravel API
+  - type: web
+    name: auditnet-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: APP_NAME
+        value: AuditNet
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: auditnet-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: auditnet-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: auditnet-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: auditnet-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: auditnet-db
+          property: password
+      - key: LIGHTHOUSE_URL
+        fromService:
+          type: web
+          name: auditnet-lighthouse
+          property: host
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_LIFETIME
+        value: 120
+    healthCheckPath: /api/health
+
+  # Lighthouse Service
+  - type: web
+    name: auditnet-lighthouse
+    env: docker
+    dockerfilePath: ./lighthouse/Dockerfile
+    dockerContext: ./lighthouse
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /health
+
+  # Frontend Vue.js
+  - type: web
+    name: auditnet-frontend
+    env: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: auditnet-backend
+          envVarKey: RENDER_EXTERNAL_URL
+
+databases:
+  - name: auditnet-db
+    databaseName: auditnet_db
+    user: audituser
+    plan: free
