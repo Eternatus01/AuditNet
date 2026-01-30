@@ -14,7 +14,7 @@ COPY . .
 RUN composer install --optimize-autoloader --no-dev && \
     mkdir -p storage/framework/{sessions,views,cache} && \
     mkdir -p storage/logs && \
-    chmod -R 775 storage bootstrap/cache && \
+    chmod -R 775 storage bootstrap/cache public && \
     chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 EXPOSE 8000
