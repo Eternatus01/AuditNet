@@ -13,12 +13,12 @@ export const useAuthApi = () => {
     try {
       await getCsrfCookie();
 
-      const response = await apiClient<AuthResponse>("/auth/register", {
+      const response = await apiClient<{ data: AuthResponse }>("/auth/register", {
         method: "POST",
         data: credentials,
       });
 
-      return response;
+      return response.data;
     } catch (error: unknown) {
       return handleApiError(error, "Ошибка регистрации");
     }
@@ -28,12 +28,12 @@ export const useAuthApi = () => {
     try {
       await getCsrfCookie();
 
-      const response = await apiClient<AuthResponse>("/auth/login", {
+      const response = await apiClient<{ data: AuthResponse }>("/auth/login", {
         method: "POST",
         data: credentials,
       });
 
-      return response;
+      return response.data;
     } catch (error: unknown) {
       if (isApiError(error) && error.response?.status === 401) {
         throw new Error(error.response?.data?.message || "Неверный email или пароль");
