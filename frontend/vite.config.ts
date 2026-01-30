@@ -12,6 +12,13 @@ export default defineConfig({
     }),
   ],
 
+  build: {
+    outDir: "dist",
+    sourcemap: false,
+    minify: "esbuild",
+    chunkSizeWarningLimit: 1000,
+  },
+
   server: {
     host: "0.0.0.0",
     port: 5173,
@@ -23,6 +30,12 @@ export default defineConfig({
       port: 5173,
     },
   },
+  
+  preview: {
+    host: "0.0.0.0",
+    port: 5173,
+  },
+  
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
