@@ -14,10 +14,12 @@
 <script setup lang="ts">
 import { computed, ref, provide, watch } from "vue";
 import { storeToRefs } from "pinia";
+import { useRouter } from "vue-router";
 import { useAuthStore } from "@/features/auth/stores/auth";
 import Sidebar from "./Sidebar.vue";
 
 const authStore = useAuthStore();
+const router = useRouter();
 
 const { isAuthenticated, user } = storeToRefs(authStore);
 
@@ -33,6 +35,7 @@ const toggleSidebar = () => {
 
 const signOut = async () => {
   await authStore.logout();
+  router.push('/login');
 };
 
 provide('sidebarCollapsed', isCollapsed);
