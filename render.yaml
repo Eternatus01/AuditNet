@@ -1,10 +1,10 @@
-services:
-  # База данных PostgreSQL
-  - type: pserv
-    name: auditnet-db
-    env: docker
+databases:
+  - name: auditnet-db
+    databaseName: auditnet_db
+    user: audituser
     plan: free
-    
+
+services:
   # Backend Laravel API
   - type: web
     name: auditnet-backend
@@ -81,9 +81,3 @@ services:
           type: web
           name: auditnet-backend
           envVarKey: RENDER_EXTERNAL_URL
-
-databases:
-  - name: auditnet-db
-    databaseName: auditnet_db
-    user: audituser
-    plan: free
