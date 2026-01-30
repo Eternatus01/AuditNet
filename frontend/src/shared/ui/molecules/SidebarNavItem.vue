@@ -5,7 +5,7 @@
       :to="!isButton ? to : undefined"
       :class="['nav-link', { active: isActive, danger: variant === 'danger' }]"
       :aria-label="ariaLabel"
-      @click="isButton ? handleClick : undefined"
+      @click="handleClick"
     >
       <div class="nav-icon">
         <slot name="icon" />
@@ -51,8 +51,11 @@ const isActive = computed(() => {
   return props.routeName ? route.name === props.routeName : false;
 });
 
-const handleClick = () => {
-  emit("click");
+const handleClick = (event: Event) => {
+  if (props.isButton) {
+    event.preventDefault();
+    emit("click");
+  }
 };
 </script>
 
