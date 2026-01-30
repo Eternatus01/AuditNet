@@ -19,9 +19,12 @@ class AuthController extends BaseApiController
 
             $user = User::create($data);
 
-            Auth::login($user);
+            $token = $user->createToken('auth-token')->plainTextToken;
 
-            return $this->successResponse(['user' => new UserResource($user)], null, 201);
+            return $this->successResponse([
+                'user' => new UserResource($user),
+                'token' => $token
+            ], null, 201);
         } catch (\Exception $e) {
             Log::error('Registration error', ['error' => $e->getMessage()]);
             return $this->errorResponse('Ошибка регистрации. Попробуйте позже.', 500);
@@ -33,15 +36,22 @@ class AuthController extends BaseApiController
         try {
             $credentials = $request->only(['email', 'password']);
 
-            if (!Auth::attempt($credentials, true)) {
+            if (!Auth::attempt($credentials)) {
                 return $this->errorResponse('Неверное имя пользователя или пароль', 401);
             }
 
             $user = Auth::user();
 
-            $request->session()->regenerate();
+            // Удаляем старые токены
+            $user->tokens()->delete();
 
-            return $this->successResponse(['user' => new UserResource($user)]);
+            // Создаём новый токен
+            $token = $user->createToken('auth-token')->plainTextToken;
+
+            return $this->successResponse([
+                'user' => new UserResource($user),
+                'token' => $token
+            ]);
 
         } catch (\Exception $e) {
             Log::error('Login error', [
@@ -56,11 +66,8 @@ class AuthController extends BaseApiController
     public function logout()
     {
         try {
-            Auth::guard('web')->logout();
-
-            request()->session()->invalidate();
-
-            request()->session()->regenerateToken();
+            // Удаляем текущий токен
+            Auth::user()->currentAccessToken()->delete();
 
             return $this->successResponse(null, 'Вы успешно вышли');
         } catch (\Exception $e) {

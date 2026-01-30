@@ -4,6 +4,7 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
+import { tokenStorage } from "./tokenStorage";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "https://auditnet-backend.onrender.com/api";
 
@@ -14,31 +15,13 @@ const axiosInstance = axios.create({
     Accept: "application/json",
     "Content-Type": "application/json",
   },
-  withCredentials: true,
 });
-
-function getCookie(name: string): string | null {
-  try {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    
-    if (parts.length === 2) {
-      const cookieValue = parts.pop()?.split(";").shift();
-      return cookieValue ? decodeURIComponent(cookieValue) : null;
-    }
-    
-    return null;
-  } catch (error) {
-    console.error(`Error reading cookie "${name}":`, error);
-    return null;
-  }
-}
 
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = getCookie('XSRF-TOKEN');
+    const token = tokenStorage.get();
     if (token) {
-      config.headers['X-XSRF-TOKEN'] = token;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     
     return config;
@@ -60,23 +43,8 @@ export const apiClient = <T = unknown>(url: string, options: ApiClientOptions = 
   }).then((response) => response.data as T);
 
 export const getCsrfCookie = async (): Promise<void> => {
-  const baseUrl = BASE_URL.replace(/\/api$/, "");
-  const csrfUrl = `${baseUrl}/sanctum/csrf-cookie`;
-
-  try {
-    await axios.get(csrfUrl, {
-      withCredentials: true,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    console.log('CSRF cookie set successfully');
-  } catch (error) {
-    console.error('Failed to get CSRF cookie:', error);
-    throw error;
-  }
+  // Больше не нужен для token-based auth
+  return Promise.resolve();
 };
 
 export { axiosInstance };

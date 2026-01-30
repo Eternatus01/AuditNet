@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useAuthApi } from "../composables/useAuthApi";
+import { tokenStorage } from "@/shared/utils/tokenStorage";
 import type { User, SignUpCredentials, SignInCredentials, AuthResponse } from "../types";
 
 export const useAuthStore = defineStore("auth", () => {
@@ -16,6 +17,9 @@ export const useAuthStore = defineStore("auth", () => {
       error.value = null;
       const response = await authApi.signUp(credentials);
 
+      if (response.token) {
+        tokenStorage.set(response.token);
+      }
       user.value = response.user ?? null;
 
       return response;
@@ -34,6 +38,9 @@ export const useAuthStore = defineStore("auth", () => {
       error.value = null;
       const response = await authApi.signIn(credentials);
 
+      if (response.token) {
+        tokenStorage.set(response.token);
+      }
       user.value = response.user ?? null;
 
       return response;
@@ -51,8 +58,11 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       error.value = null;
       await authApi.logout();
+      tokenStorage.remove();
       user.value = null;
     } catch (e: unknown) {
+      tokenStorage.remove();
+      user.value = null;
       if (e instanceof Error) {
         error.value = e.message;
       } else {

@@ -24,18 +24,18 @@ Route::get('/user', function (Request $request) {
     }
     
     return new UserResource($user);
-})->middleware(['web', 'auth:web']);
+})->middleware('auth:sanctum');
 
-Route::prefix('auth')->middleware(['web', 'throttle:api'])->group(function () {
+Route::prefix('auth')->middleware('throttle:api')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/register', [AuthController::class, 'register'])->name('register');
 });
 
-Route::prefix('auth')->middleware(['web', 'throttle:api', 'auth:web'])->group(function () {
+Route::prefix('auth')->middleware(['throttle:api', 'auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
-Route::prefix('audit')->middleware(['web', 'throttle:api', 'auth:web'])->group(function () {
+Route::prefix('audit')->middleware(['throttle:api', 'auth:sanctum'])->group(function () {
     Route::post('/analyze', [AuditController::class, 'analyze'])->middleware('prevent.ssrf');
     Route::post('/security-audit', [SecurityController::class, 'analyze'])->middleware('prevent.ssrf');
     Route::get('/history', [AuditController::class, 'history']);
