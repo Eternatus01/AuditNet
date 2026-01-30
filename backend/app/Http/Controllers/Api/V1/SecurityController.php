@@ -4,39 +4,51 @@ namespace App\Http\Controllers\Api\V1;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\BaseApiController;
 use App\Http\Requests\SecurityAuditRequest;
-use App\Jobs\SecurityAuditJob;
+use App\Services\Security\SecurityAuditService;
 
 class SecurityController extends BaseApiController
 {
+    public function __construct(
+        private SecurityAuditService $securityAuditService
+    ) {}
+
     public function analyze(SecurityAuditRequest $request): JsonResponse
     {
-        $url = $request->input('url');
+        try {
+            $url = $request->input('url');
 
-        if (!preg_match('/^https?:\/\//', $url)) {
-            $url = 'https://' . $url;
-        }
-
-        $cacheKey = 'security_audit_' . md5($url);
-
-        $cachedResult = Cache::get($cacheKey);
-        if ($cachedResult) {
-            if (isset($cachedResult['error'])) {
-                return $this->errorResponse($cachedResult['error'], 500);
+            if (!preg_match('/^https?:\/\//', $url)) {
+                $url = 'https://' . $url;
             }
-            return $this->successResponse($cachedResult);
+
+            Log::info('Starting security audit', ['url' => $url]);
+
+            // Выполняем анализ синхронно
+            $result = $this->securityAuditService->auditWebsite($url);
+
+            Log::info('Security audit completed', ['url' => $url]);
+
+            return $this->successResponse([
+                'checked_url' => $result->checkedUrl,
+                'host' => $result->host,
+                'headers' => $result->headers,
+                'sensitive_files' => $result->sensitiveFiles,
+                'directory_listing' => $result->directoryListing,
+                'robots_txt' => $result->robotsTxt,
+                'sitemap_xml' => $result->sitemapXml,
+                'scripts_info' => $result->scriptsInfo,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Security audit error', [
+                'url' => $url ?? 'unknown',
+                'error' => $e->getMessage()
+            ]);
+
+            return $this->errorResponse('Ошибка при проверке безопасности: ' . $e->getMessage(), 500);
         }
-
-        SecurityAuditJob::dispatch($url, $cacheKey);
-
-        return $this->successResponse(
-            [
-                'status' => 'processing',
-                'cache_key' => $cacheKey,
-            ],
-            'Аудит безопасности начался. Проверьте результаты через несколько секунд.',
-            202
-        );
     }
 }
