@@ -60,10 +60,18 @@ class AuditController extends BaseApiController
                 Log::error('Audit analysis error', [
                     'auditId' => $audit->id,
                     'url' => $url,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
                 ]);
 
-                return $this->errorResponse('Ошибка при анализе: ' . $e->getMessage(), 500);
+                $errorMessage = 'Ошибка при анализе';
+                if (str_contains($e->getMessage(), 'Lighthouse')) {
+                    $errorMessage = 'Lighthouse сервис недоступен. Попробуйте через минуту (сервис "просыпается")';
+                } elseif (str_contains($e->getMessage(), 'timeout')) {
+                    $errorMessage = 'Превышено время ожидания. Попробуйте ещё раз';
+                }
+
+                return $this->errorResponse($errorMessage . ': ' . $e->getMessage(), 500);
             }
 
         } catch (\Exception $e) {
