@@ -86,11 +86,20 @@ const handleClick = () => {
   width: 18px;
   height: 18px;
   color: var(--primary-color);
+  flex-shrink: 0;
 }
 
 .audit-url {
   font-size: 1.1rem;
   font-weight: 500;
+  min-width: 0;
+  flex: 1;
+}
+
+.audit-url span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .audit-date {
