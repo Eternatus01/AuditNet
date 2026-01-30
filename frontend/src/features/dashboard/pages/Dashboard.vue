@@ -127,11 +127,6 @@ const securityError = computed(() => error.value);
 const analyzeWebsite = async () => {
   const lighthousePromise = auditStore
     .analyzeWebsite(websiteUrl.value)
-    .then((response: any) => {
-      if (response?.data?.audit_id) {
-        startPolling(response.data.audit_id);
-      }
-    })
     .catch((err) => {
       logger.error("Lighthouse error:", err);
     });

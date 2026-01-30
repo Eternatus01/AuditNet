@@ -55,7 +55,23 @@ export const useAuditStore = defineStore("audit", () => {
     try {
       const response = await auditApi.analyzeWebsite(websiteUrl);
 
-      if (response?.success) {
+      if (response?.success && response?.data) {
+        // Обновляем данные сразу (синхронное выполнение)
+        const auditData = response.data;
+        
+        performanceScore.value = auditData.performance ?? null;
+        accessibilityScore.value = auditData.accessibility ?? null;
+        bestPracticesScore.value = auditData.best_practices ?? null;
+        seoScore.value = auditData.seo ?? null;
+
+        lcp.value = auditData.lcp ?? null;
+        fid.value = auditData.fid ?? null;
+        cls.value = auditData.cls ?? null;
+        fcp.value = auditData.fcp ?? null;
+        tbt.value = auditData.tbt ?? null;
+        speedIndex.value = auditData.speed_index ?? null;
+
+        isLighthouseLoading.value = false;
         return response;
       } else {
         error.value = "Не удалось запустить анализ";
