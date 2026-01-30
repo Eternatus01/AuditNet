@@ -14,8 +14,9 @@ WORKDIR /app
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
-RUN npm ci --production
+COPY --from=builder /app/vite.config.ts ./
+RUN npm ci
 
 EXPOSE 5173
 
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "5173"]
+CMD ["npm", "run", "preview"]
