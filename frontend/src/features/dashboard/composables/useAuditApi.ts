@@ -5,12 +5,48 @@ import type { AnalyzeWebsiteResponse, SecurityAuditResponse, AuditStatusResponse
 export const useAuditApi = () => {
   const analyzeWebsite = async (websiteUrl: string): Promise<AnalyzeWebsiteResponse> => {
     try {
+      const MAX_RETRIES = 60; // 60 попыток = 5 минут
+      const RETRY_DELAY = 5000; // 5 секунд
+      
       const response = await apiClient<AnalyzeWebsiteResponse>("/audit/analyze", {
         method: "POST",
         data: {
           url: websiteUrl.trim(),
         },
       });
+
+      // Если аудит создан и ожидает выполнения
+      if (response?.success && response?.data?.id) {
+        const auditId = response.data.id;
+        
+        // Проверяем статус в цикле
+        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+          
+          try {
+            const statusResponse = await apiClient<any>(`/audit/status/${auditId}`, {
+              method: "GET",
+            });
+
+            if (statusResponse?.data?.status === 'completed' && statusResponse?.data?.result) {
+              return {
+                success: true,
+                data: statusResponse.data.result
+              };
+            }
+
+            if (statusResponse?.data?.status === 'failed') {
+              throw new Error(statusResponse.data.error_message || "Аудит завершился с ошибкой");
+            }
+          } catch (error: unknown) {
+            if (attempt === MAX_RETRIES - 1) {
+              throw error;
+            }
+          }
+        }
+        
+        throw new Error("Превышено время ожидания результатов аудита");
+      }
 
       if (response?.success && response?.data) {
         return response;
@@ -23,8 +59,8 @@ export const useAuditApi = () => {
   };
 
   const fetchSecurityAudit = async (websiteUrl: string): Promise<SecurityAuditResponse> => {
-    const MAX_RETRIES = 10;
-    const RETRY_DELAY = 5000;
+    const MAX_RETRIES = 60; // 60 попыток = 5 минут
+    const RETRY_DELAY = 5000; // 5 секунд
     
     const initialResponse = await apiClient<any>("/audit/security-audit", {
       method: "POST",
