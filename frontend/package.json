@@ -11,6 +11,7 @@
     "build": "vite build",
     "build:check": "vue-tsc -b && vite build",
     "preview": "vite preview",
+    "start": "serve -s dist -l 5173",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,vue,json,css,scss,md}\""
   },
@@ -18,6 +19,7 @@
     "axios": "^1.13.2",
     "chart.js": "^4.5.1",
     "pinia": "^3.0.4",
+    "serve": "^14.2.3",
     "vee-validate": "^4.15.1",
     "vue": "^3.5.22",
     "vue-chartjs": "^5.3.3",
