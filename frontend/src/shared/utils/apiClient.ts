@@ -63,9 +63,20 @@ export const getCsrfCookie = async (): Promise<void> => {
   const baseUrl = BASE_URL.replace(/\/api$/, "");
   const csrfUrl = `${baseUrl}/sanctum/csrf-cookie`;
 
-  await axios.get(csrfUrl, {
-    withCredentials: true,
-  });
+  try {
+    await axios.get(csrfUrl, {
+      withCredentials: true,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    console.log('CSRF cookie set successfully');
+  } catch (error) {
+    console.error('Failed to get CSRF cookie:', error);
+    throw error;
+  }
 };
 
 export { axiosInstance };
