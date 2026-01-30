@@ -7,13 +7,16 @@ use App\Http\Requests\AuditRequest;
 use App\Http\Resources\AuditResource;
 use App\Jobs\AnalyzeWebsiteJob;
 use App\Repositories\AuditRepository;
+use App\Services\Audit\AuditService;
+use App\Enums\AuditStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
 class AuditController extends BaseApiController
 {
     public function __construct(
-        private AuditRepository $auditRepository
+        private AuditRepository $auditRepository,
+        private AuditService $auditService
     ) {}
 
     public function analyze(AuditRequest $request): JsonResponse
@@ -24,17 +27,44 @@ class AuditController extends BaseApiController
 
             $audit = $this->auditRepository->createPendingAudit($url, $user->id);
 
-            AnalyzeWebsiteJob::dispatch($url, $user->id, $audit->id);
+            // Выполняем анализ синхронно (для бесплатного плана Render без queue worker)
+            try {
+                $this->auditRepository->updateAuditStatus($audit->id, AuditStatus::PROCESSING);
 
-            return $this->successResponse(
-                [
-                    'id' => $audit->id,
-                    'status' => $audit->status->value,
+                $result = $this->auditService->performAuditForJob($url);
+
+                $this->auditRepository->updateAuditWithResults($audit->id, [
+                    'performance' => $result->performance,
+                    'accessibility' => $result->accessibility,
+                    'bestPractices' => $result->bestPractices,
+                    'seo' => $result->seo,
+                    'lcp' => $result->lcp,
+                    'fid' => $result->fid,
+                    'cls' => $result->cls,
+                    'fcp' => $result->fcp,
+                    'tbt' => $result->tbt,
+                    'speedIndex' => $result->speedIndex,
+                ]);
+
+                // Получаем обновленный аудит
+                $completedAudit = $this->auditRepository->findById($audit->id);
+
+                return $this->successResponse(
+                    new AuditResource($completedAudit),
+                    'Анализ выполнен успешно.'
+                );
+
+            } catch (\Exception $e) {
+                $this->auditRepository->markAuditAsFailed($audit->id, $e->getMessage());
+                
+                Log::error('Audit analysis error', [
+                    'auditId' => $audit->id,
                     'url' => $url,
-                ],
-                'Анализ начался. Результаты будут доступны через 1-2 минуты.',
-                202
-            );
+                    'error' => $e->getMessage()
+                ]);
+
+                return $this->errorResponse('Ошибка при анализе: ' . $e->getMessage(), 500);
+            }
 
         } catch (\Exception $e) {
             Log::error('Lighthouse audit dispatch error', ['message' => $e->getMessage()]);

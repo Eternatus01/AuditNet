@@ -10,7 +10,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || "https://auditnet-backend.onren
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
-  timeout: 30_000,
+  timeout: 200_000, // 200 секунд для долгих операций Lighthouse
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",

@@ -5,9 +5,6 @@ import type { AnalyzeWebsiteResponse, SecurityAuditResponse, AuditStatusResponse
 export const useAuditApi = () => {
   const analyzeWebsite = async (websiteUrl: string): Promise<AnalyzeWebsiteResponse> => {
     try {
-      const MAX_RETRIES = 60; // 60 попыток = 5 минут
-      const RETRY_DELAY = 5000; // 5 секунд
-      
       const response = await apiClient<{ data: any }>("/audit/analyze", {
         method: "POST",
         data: {
@@ -15,38 +12,11 @@ export const useAuditApi = () => {
         },
       });
 
-      // Backend возвращает { id, status: "pending", url }
-      if (response?.success && response?.data?.id) {
-        const auditId = response.data.id;
-        
-        // Проверяем статус в цикле
-        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-          
-          try {
-            const statusResponse = await apiClient<any>(`/audit/status/${auditId}`, {
-              method: "GET",
-            });
-
-            // Проверяем статус аудита
-            if (statusResponse?.data?.data?.status === 'completed') {
-              return {
-                success: true,
-                data: statusResponse.data.data
-              };
-            }
-
-            if (statusResponse?.data?.data?.status === 'failed') {
-              throw new Error(statusResponse.data.data.error_message || "Аудит завершился с ошибкой");
-            }
-          } catch (error: unknown) {
-            if (attempt === MAX_RETRIES - 1) {
-              throw error;
-            }
-          }
-        }
-        
-        throw new Error("Превышено время ожидания результатов аудита");
+      if (response?.success && response?.data) {
+        return {
+          success: true,
+          data: response.data
+        };
       }
 
       throw new Error("Не удалось получить результаты анализа");

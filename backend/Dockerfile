@@ -5,7 +5,9 @@ WORKDIR /var/www
 RUN apt-get update && \
     apt-get install -y libzip-dev zip unzip libpng-dev libonig-dev libxml2-dev libpq-dev && \
     docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    echo "max_execution_time = 200" > /usr/local/etc/php/conf.d/custom.ini && \
+    echo "memory_limit = 512M" >> /usr/local/etc/php/conf.d/custom.ini
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
