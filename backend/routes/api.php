@@ -26,7 +26,7 @@ Route::get('/user', function (Request $request) {
     return new UserResource($user);
 })->middleware('auth:sanctum');
 
-Route::prefix('auth')->middleware('throttle:api')->group(function () {
+Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/register', [AuthController::class, 'register'])->name('register');
 });

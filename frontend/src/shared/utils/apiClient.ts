@@ -10,7 +10,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || "https://auditnet-backend.onren
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
-  timeout: 200_000, // 200 секунд для долгих операций Lighthouse
+  timeout: 200_000,
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -31,7 +31,21 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => response,
-  async (error: AxiosError) => Promise.reject(error)
+  async (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      tokenStorage.remove();
+      
+      const publicRoutes = ['/login', '/register', '/'];
+      const currentPath = window.location.pathname;
+      
+      if (!publicRoutes.includes(currentPath)) {
+        localStorage.setItem('auth_expired_message', 'Ваша сессия истекла. Пожалуйста, войдите снова.');
+        window.location.href = '/login';
+      }
+    }
+    
+    return Promise.reject(error);
+  }
 );
 
 export type ApiClientOptions = AxiosRequestConfig;
@@ -43,7 +57,6 @@ export const apiClient = <T = unknown>(url: string, options: ApiClientOptions = 
   }).then((response) => response.data as T);
 
 export const getCsrfCookie = async (): Promise<void> => {
-  // Больше не нужен для token-based auth
   return Promise.resolve();
 };
 

@@ -27,5 +27,14 @@ class AppServiceProvider extends ServiceProvider
                 return response()->json(['message' => 'Too many requests'], 429);
             });
         });
+
+        RateLimiter::for('auth', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip())->response(function () {
+                return response()->json([
+                    'message' => 'Слишком много попыток входа. Попробуйте через минуту.',
+                    'retry_after' => 60
+                ], 429);
+            });
+        });
     }
 }

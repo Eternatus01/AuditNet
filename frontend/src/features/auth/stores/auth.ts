@@ -17,8 +17,8 @@ export const useAuthStore = defineStore("auth", () => {
       error.value = null;
       const response = await authApi.signUp(credentials);
 
-      if (response.token) {
-        tokenStorage.set(response.token);
+      if (response.token && response.expires_at) {
+        tokenStorage.set(response.token, response.expires_at);
       }
       user.value = response.user ?? null;
 
@@ -38,8 +38,8 @@ export const useAuthStore = defineStore("auth", () => {
       error.value = null;
       const response = await authApi.signIn(credentials);
 
-      if (response.token) {
-        tokenStorage.set(response.token);
+      if (response.token && response.expires_at) {
+        tokenStorage.set(response.token, response.expires_at);
       }
       user.value = response.user ?? null;
 
@@ -78,7 +78,6 @@ export const useAuthStore = defineStore("auth", () => {
       user.value = response ?? null;
       return response;
     } catch (error) {
-      // Ошибка уже обработана в useAuthApi, просто сбрасываем пользователя
       user.value = null;
       return null;
     } finally {

@@ -3,6 +3,10 @@
     <Form :validation-schema="loginSchema" class="auth-form" @submit="onSubmit">
       <h2>Вход в систему</h2>
 
+      <div v-if="sessionExpiredMessage" class="warning-message">
+        {{ sessionExpiredMessage }}
+      </div>
+
       <div class="form-fields">
         <InputField
           name="email"
@@ -31,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { Form } from "vee-validate";
 import { useAuthStore } from "../stores/auth";
@@ -45,6 +49,19 @@ const router = useRouter();
 const authStore = useAuthStore();
 const { error } = storeToRefs(authStore);
 const isLoading = ref<boolean>(false);
+const sessionExpiredMessage = ref<string | null>(null);
+
+onMounted(() => {
+  const message = localStorage.getItem('auth_expired_message');
+  if (message) {
+    sessionExpiredMessage.value = message;
+    localStorage.removeItem('auth_expired_message');
+    
+    setTimeout(() => {
+      sessionExpiredMessage.value = null;
+    }, 5000);
+  }
+});
 
 const onSubmit = async (values: unknown): Promise<void> => {
   isLoading.value = true;
@@ -57,7 +74,6 @@ const onSubmit = async (values: unknown): Promise<void> => {
       await router.push({ name: "home" });
     }
   } catch {
-    // Ошибка уже обработана в store
   } finally {
     isLoading.value = false;
   }
@@ -69,5 +85,27 @@ const onSubmit = async (values: unknown): Promise<void> => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.warning-message {
+  padding: 1rem;
+  background-color: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 8px;
+  color: #ffc107;
+  font-size: 0.9rem;
+  text-align: center;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

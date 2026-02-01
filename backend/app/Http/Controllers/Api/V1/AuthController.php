@@ -19,11 +19,16 @@ class AuthController extends BaseApiController
 
             $user = User::create($data);
 
-            $token = $user->createToken('auth-token')->plainTextToken;
+            $token = $user->createToken(
+                'auth-token',
+                ['*'],
+                now()->addDays(7)
+            )->plainTextToken;
 
             return $this->successResponse([
                 'user' => new UserResource($user),
-                'token' => $token
+                'token' => $token,
+                'expires_at' => now()->addDays(7)->toIso8601String()
             ], null, 201);
         } catch (\Exception $e) {
             Log::error('Registration error', ['error' => $e->getMessage()]);
@@ -45,12 +50,17 @@ class AuthController extends BaseApiController
             // Удаляем старые токены
             $user->tokens()->delete();
 
-            // Создаём новый токен
-            $token = $user->createToken('auth-token')->plainTextToken;
+            // Создаём новый токен с expiration
+            $token = $user->createToken(
+                'auth-token',
+                ['*'],
+                now()->addDays(7)
+            )->plainTextToken;
 
             return $this->successResponse([
                 'user' => new UserResource($user),
-                'token' => $token
+                'token' => $token,
+                'expires_at' => now()->addDays(7)->toIso8601String()
             ]);
 
         } catch (\Exception $e) {

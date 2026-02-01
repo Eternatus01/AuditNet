@@ -56,7 +56,6 @@ export const useAuditStore = defineStore("audit", () => {
       const response = await auditApi.analyzeWebsite(websiteUrl);
 
       if (response?.success && response?.data) {
-        // Обновляем данные сразу (синхронное выполнение)
         const auditData = response.data;
         
         performanceScore.value = auditData.performance ?? null;

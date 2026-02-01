@@ -18,6 +18,7 @@ export interface SignInCredentials {
 export interface AuthResponse {
   user: User;
   token?: string;
+  expires_at?: string;
 }
 
 export interface LogoutResponse {
