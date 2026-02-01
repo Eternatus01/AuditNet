@@ -6,7 +6,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/",
     name: "home",
-    component: () => import("@/features/home/pages/Home.vue"),
+    redirect: "/dashboard",
   },
   {
     path: "/register",
@@ -78,7 +78,7 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   if (to.meta.guestOnly && authStore.isAuthenticated) {
-    return next({ name: "home" });
+    return next({ name: "dashboard" });
   }
 
   return next();

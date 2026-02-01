@@ -1,5 +1,5 @@
 :root {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', sans-serif;
   line-height: 1.6;
   font-weight: 400;
 
@@ -42,10 +42,10 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
   
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
 }
 
 body {
@@ -162,10 +162,10 @@ svg {
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 1.25rem;
   background-color: var(--sidebar-bg, #1a1a1a);
-  padding: 2.5rem;
-  border-radius: 12px;
+  padding: 2.75rem;
+  border-radius: var(--radius-lg, 18px);
   border: 1px solid #333;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
@@ -173,14 +173,14 @@ svg {
 /* Поля ввода */
 .auth-input {
   width: 100%;
-  padding: 0.8rem 1rem;
+  padding: 0.875rem 1.125rem;
   box-sizing: border-box;
   font-size: 1rem;
   font-family: inherit;
   color: inherit;
   background-color: #242424;
   border: 1px solid #3a3a3a;
-  border-radius: 8px;
+  border-radius: var(--radius-md, 14px);
   transition: border-color 0.25s, box-shadow 0.25s;
   outline: none;
 }
@@ -244,14 +244,15 @@ svg {
 }
 
 .dashboard-header h1 {
-  font-size: 2.5rem;
+  font-size: 2.75rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
   color: #fff;
+  letter-spacing: -0.02em;
 }
 
 .dashboard-subtitle {
-  font-size: 1.1rem;
+  font-size: 1.125rem;
   color: rgba(255, 255, 255, 0.6);
   margin: 0;
 }
@@ -266,8 +267,8 @@ svg {
   align-items: center;
   gap: 1rem;
   background-color: var(--sidebar-bg, #1a1a1a);
-  padding: 1rem 1.5rem;
-  border-radius: 12px;
+  padding: 1.125rem 1.625rem;
+  border-radius: var(--radius-lg, 18px);
   border: 1px solid #333;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
@@ -279,13 +280,13 @@ svg {
 
 .url-input {
   flex: 1;
-  padding: 0.8rem 1rem;
+  padding: 0.875rem 1.125rem;
   font-size: 1rem;
   font-family: inherit;
   color: #fff;
   background-color: #242424;
   border: 1px solid #3a3a3a;
-  border-radius: 8px;
+  border-radius: var(--radius-md, 14px);
   outline: none;
   transition: border-color 0.25s, box-shadow 0.25s;
 }
@@ -303,21 +304,23 @@ svg {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.8rem 1.5rem;
-  background-color: var(--primary-color, #646cff);
+  padding: 0.875rem 1.75rem;
+  background-color: var(--primary-color, #7c3aed);
   color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md, 14px);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.25s, transform 0.1s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
+  box-shadow: 0 4px 14px 0 rgba(124, 58, 237, 0.35);
 }
 
 .analyze-btn:hover {
-  background-color: var(--primary-hover, #535bf2);
-  transform: translateY(-1px);
+  background-color: var(--primary-hover, #6d28d9);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
 }
 
 .analyze-btn:active {
@@ -365,8 +368,8 @@ svg {
 .score-card {
   background-color: var(--sidebar-bg, #1a1a1a);
   border: 1px solid #333;
-  border-radius: 12px;
-  padding: 1.5rem;
+  border-radius: var(--radius-lg, 18px);
+  padding: 1.75rem;
   transition: transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -386,9 +389,9 @@ svg {
 }
 
 .score-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -412,7 +415,7 @@ svg {
 
 .score-header h3 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: #fff;
   flex: 1;
@@ -426,31 +429,32 @@ svg {
 }
 
 .score-number {
-  font-size: 3rem;
+  font-size: 3.25rem;
   font-weight: 700;
   color: #fff;
   line-height: 1;
+  letter-spacing: -0.02em;
 }
 
 .score-label {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   color: rgba(255, 255, 255, 0.5);
 }
 
 .score-progress {
   width: 100%;
-  height: 8px;
+  height: 10px;
   background-color: #242424;
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: hidden;
   position: relative;
 }
 
 .score-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary-color, #646cff) 0%, var(--primary-hover, #535bf2) 100%);
-  border-radius: 4px;
-  transition: width 0.5s ease;
+  background: linear-gradient(90deg, var(--primary-color, #7c3aed) 0%, var(--primary-light, #8b5cf6) 100%);
+  border-radius: 6px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
 
@@ -481,15 +485,16 @@ svg {
 }
 
 .section-title {
-  font-size: 2rem;
+  font-size: 2.125rem;
   font-weight: 700;
   color: #fff;
   margin: 0 0 0.5rem 0;
   text-align: center;
+  letter-spacing: -0.02em;
 }
 
 .section-subtitle {
-  font-size: 1rem;
+  font-size: 1.0625rem;
   color: rgba(255, 255, 255, 0.6);
   text-align: center;
   margin: 0 0 2rem 0;
@@ -506,8 +511,8 @@ svg {
 .metric-card {
   background-color: var(--sidebar-bg, #1a1a1a);
   border: 1px solid #333;
-  border-radius: 12px;
-  padding: 1.5rem;
+  border-radius: var(--radius-lg, 18px);
+  padding: 1.75rem;
   transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -550,20 +555,20 @@ svg {
 }
 
 .metric-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(100, 108, 255, 0.2);
-  color: var(--primary-color, #646cff);
+  background-color: rgba(124, 58, 237, 0.15);
+  color: var(--primary-color, #7c3aed);
   flex-shrink: 0;
 }
 
 .metric-header h3 {
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1.375rem;
   font-weight: 600;
   color: #fff;
   flex: 1;
@@ -599,17 +604,19 @@ svg {
 }
 
 .metric-value {
-  font-size: 2.5rem;
+  font-size: 2.75rem;
   font-weight: 700;
   color: #fff;
   margin: 1rem 0;
   line-height: 1;
+  letter-spacing: -0.02em;
 }
 
 .metric-description {
-  font-size: 0.9rem;
+  font-size: 0.9375rem;
   color: rgba(255, 255, 255, 0.7);
   margin: 0.5rem 0;
+  line-height: 1.5;
 }
 
 .metric-threshold {

@@ -3,7 +3,6 @@
     class="sidebar"
     :class="{ 'is-expanded': !collapsed, 'is-collapsed': collapsed }"
   >
-    <!-- Шапка сайдбара -->
     <div class="sidebar-header">
       <SidebarLogo :text="logoText" :collapsed="collapsed" />
       
@@ -20,14 +19,9 @@
       </IconButton>
     </div>
 
-    <!-- Навигация -->
     <SidebarNav :is-authenticated="isAuthenticated" />
 
-    <!-- Футер с кнопкой выхода -->
     <div v-if="isAuthenticated" class="sidebar-footer">
-      <div v-if="userName && !collapsed" class="user-name">
-        {{ userName }}
-      </div>
       <SidebarNavItem
         is-button
         label="Выход"
@@ -57,13 +51,11 @@ withDefaults(
     collapsed?: boolean;
     isAuthenticated?: boolean;
     logoText?: string;
-    userName?: string;
   }>(),
   {
     collapsed: false,
     isAuthenticated: false,
     logoText: "AuditNet",
-    userName: "",
   }
 );
 

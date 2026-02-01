@@ -81,7 +81,7 @@ const handleClick = () => {
   font-family: inherit;
   font-weight: 600;
   border: none;
-  border-radius: var(--radius-md, 12px);
+  border-radius: var(--radius-lg, 18px);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -99,21 +99,21 @@ const handleClick = () => {
 }
 
 .btn-sm {
-  padding: 0.5rem 1.125rem;
-  font-size: 0.875rem;
-  min-height: 36px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.9375rem;
+  min-height: 38px;
 }
 
 .btn-md {
-  padding: 0.625rem 1.5rem;
-  font-size: 0.9375rem;
-  min-height: 44px;
+  padding: 0.6875rem 1.625rem;
+  font-size: 1rem;
+  min-height: 46px;
 }
 
 .btn-lg {
-  padding: 0.875rem 2rem;
-  font-size: 1rem;
-  min-height: 50px;
+  padding: 0.9375rem 2.125rem;
+  font-size: 1.0625rem;
+  min-height: 52px;
 }
 
 .btn-primary {

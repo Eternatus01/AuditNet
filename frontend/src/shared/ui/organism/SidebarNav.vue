@@ -1,6 +1,5 @@
 <template>
   <nav class="sidebar-nav">
-    <!-- Меню для НЕ авторизованного пользователя -->
     <template v-if="!isAuthenticated">
       <SidebarNavItem
         to="/register"
@@ -25,16 +24,15 @@
       </SidebarNavItem>
     </template>
 
-    <!-- Меню для авторизованного пользователя -->
     <template v-if="isAuthenticated">
       <SidebarNavItem
         to="/dashboard"
-        label="Dashboard"
-        aria-label="Dashboard"
+        label="Главная"
+        aria-label="Главная"
         route-name="dashboard"
       >
         <template #icon>
-          <IconLucideLayoutDashboard />
+          <IconLucideBarChart3 />
         </template>
       </SidebarNavItem>
 
@@ -67,7 +65,7 @@
 import SidebarNavItem from "@/shared/ui/molecules/SidebarNavItem.vue";
 import IconLucideUserPlus from "~icons/lucide/user-plus";
 import IconLucideLogIn from "~icons/lucide/log-in";
-import IconLucideLayoutDashboard from "~icons/lucide/layout-dashboard";
+import IconLucideBarChart3 from "~icons/lucide/bar-chart-3";
 import IconLucideHistory from "~icons/lucide/history";
 import IconLucideUser from "~icons/lucide/user";
 

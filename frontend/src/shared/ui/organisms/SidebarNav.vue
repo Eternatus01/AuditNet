@@ -1,11 +1,10 @@
 <template>
   <nav class="sidebar-nav">
-    <!-- Меню для НЕ авторизованного пользователя -->
     <template v-if="!isAuthenticated">
       <SidebarNavItem
         to="/register"
-        label="Регистрация"
-        aria-label="Регистрация"
+        label="Sign Up"
+        aria-label="Sign Up"
         route-name="register"
       >
         <template #icon>
@@ -15,8 +14,8 @@
 
       <SidebarNavItem
         to="/login"
-        label="Войти"
-        aria-label="Войти"
+        label="Login"
+        aria-label="Login"
         route-name="login"
       >
         <template #icon>
@@ -25,7 +24,6 @@
       </SidebarNavItem>
     </template>
 
-    <!-- Меню для авторизованного пользователя -->
     <template v-if="isAuthenticated">
       <SidebarNavItem
         to="/dashboard"
@@ -34,14 +32,14 @@
         route-name="dashboard"
       >
         <template #icon>
-          <IconLucideLayoutDashboard />
+          <IconLucideBarChart3 />
         </template>
       </SidebarNavItem>
 
       <SidebarNavItem
         to="/history"
-        label="История"
-        aria-label="История"
+        label="History"
+        aria-label="History"
         route-name="history"
       >
         <template #icon>
@@ -51,8 +49,8 @@
 
       <SidebarNavItem
         to="/profile"
-        label="Профиль"
-        aria-label="Профиль"
+        label="Profile"
+        aria-label="Profile"
         route-name="profile"
       >
         <template #icon>
@@ -67,7 +65,7 @@
 import SidebarNavItem from "@/shared/ui/molecules/SidebarNavItem.vue";
 import IconLucideUserPlus from "~icons/lucide/user-plus";
 import IconLucideLogIn from "~icons/lucide/log-in";
-import IconLucideLayoutDashboard from "~icons/lucide/layout-dashboard";
+import IconLucideBarChart3 from "~icons/lucide/bar-chart-3";
 import IconLucideHistory from "~icons/lucide/history";
 import IconLucideUser from "~icons/lucide/user";
 

@@ -3,7 +3,6 @@
     class="sidebar"
     :class="{ 'is-expanded': !collapsed, 'is-collapsed': collapsed }"
   >
-    <!-- Шапка сайдбара -->
     <div class="sidebar-header">
       <SidebarLogo :text="logoText" :collapsed="collapsed" />
       
@@ -11,7 +10,7 @@
         class="toggle-btn"
         variant="ghost"
         size="md"
-        :aria-label="collapsed ? 'Развернуть меню' : 'Свернуть меню'"
+        :aria-label="collapsed ? 'Expand menu' : 'Collapse menu'"
         :aria-expanded="!collapsed"
         @click="emit('toggle')"
       >
@@ -20,18 +19,16 @@
       </IconButton>
     </div>
 
-    <!-- Навигация -->
     <SidebarNav :is-authenticated="isAuthenticated" />
 
-    <!-- Футер с кнопкой выхода -->
     <div v-if="isAuthenticated" class="sidebar-footer">
       <div v-if="userName && !collapsed" class="user-name">
         {{ userName }}
       </div>
       <SidebarNavItem
         is-button
-        label="Выход"
-        aria-label="Выйти из аккаунта"
+        label="Logout"
+        aria-label="Logout from account"
         variant="danger"
         @click="emit('logout')"
       >

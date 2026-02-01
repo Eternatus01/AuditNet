@@ -69,17 +69,17 @@ const handleClick = (event: Event) => {
   display: flex;
   align-items: center;
   gap: 0.875rem;
-  padding: 0.75rem 1.125rem;
+  padding: 0.8125rem 1.25rem;
   color: var(--text-secondary, rgba(255, 255, 255, 0.65));
   text-decoration: none;
-  border-radius: var(--radius-md, 12px);
+  border-radius: var(--radius-md, 14px);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   background: transparent;
   border: none;
   width: 100%;
   text-align: left;
-  font-size: 0.9375rem;
+  font-size: 1.125rem;
   font-weight: 500;
   min-width: 0;
   overflow: hidden;
@@ -93,21 +93,8 @@ const handleClick = (event: Event) => {
 }
 
 .nav-link.active {
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(124, 58, 237, 0.05));
-  color: var(--primary-light, #8b5cf6);
-  border-left: 3px solid var(--primary-color, #7c3aed);
-  padding-left: calc(1.125rem - 3px);
-}
-
-.nav-link.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(180deg, var(--primary-color, #7c3aed), var(--primary-light, #8b5cf6));
-  border-radius: 0 4px 4px 0;
+  background: transparent;
+  color: var(--text-primary, rgba(255, 255, 255, 0.92));
 }
 
 .nav-link.danger .nav-icon {
@@ -120,8 +107,8 @@ const handleClick = (event: Event) => {
 }
 
 .nav-icon {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -131,7 +118,7 @@ const handleClick = (event: Event) => {
 .nav-icon :deep(svg) {
   width: 100%;
   height: 100%;
-  stroke-width: 2.25;
+  stroke-width: 2;
 }
 
 .link-text {

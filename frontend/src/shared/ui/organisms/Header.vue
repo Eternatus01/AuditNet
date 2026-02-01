@@ -4,7 +4,6 @@
       :collapsed="isCollapsed"
       :is-authenticated="isLogged"
       logo-text="AuditNet"
-      :user-name="userName"
       @toggle="toggleSidebar"
       @logout="signOut"
     />
@@ -21,13 +20,11 @@ import Sidebar from "./Sidebar.vue";
 const authStore = useAuthStore();
 const router = useRouter();
 
-const { isAuthenticated, user } = storeToRefs(authStore);
+const { isAuthenticated } = storeToRefs(authStore);
 
 const isCollapsed = ref(false);
 
 const isLogged = isAuthenticated;
-
-const userName = computed(() => user.value?.name || "");
 
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value;
