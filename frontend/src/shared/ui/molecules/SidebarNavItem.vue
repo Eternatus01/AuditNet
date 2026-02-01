@@ -68,44 +68,60 @@ const handleClick = (event: Event) => {
 .nav-link {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  color: rgba(255, 255, 255, 0.7);
+  gap: 0.875rem;
+  padding: 0.75rem 1.125rem;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.65));
   text-decoration: none;
-  border-radius: 8px;
-  transition: all 0.2s ease-in-out;
+  border-radius: var(--radius-md, 12px);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   background: transparent;
   border: none;
   width: 100%;
   text-align: left;
-  font-size: 1rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
   min-width: 0;
   overflow: hidden;
+  position: relative;
 }
 
 .nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.95);
+  background-color: var(--bg-tertiary, rgba(39, 39, 42, 0.6));
+  color: var(--text-primary, rgba(255, 255, 255, 0.92));
+  transform: translateX(2px);
 }
 
 .nav-link.active {
-  background-color: rgba(100, 108, 255, 0.15);
-  color: #646cff;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(124, 58, 237, 0.05));
+  color: var(--primary-light, #8b5cf6);
+  border-left: 3px solid var(--primary-color, #7c3aed);
+  padding-left: calc(1.125rem - 3px);
+}
+
+.nav-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--primary-color, #7c3aed), var(--primary-light, #8b5cf6));
+  border-radius: 0 4px 4px 0;
 }
 
 .nav-link.danger .nav-icon {
-  color: #ff6b6b;
+  color: var(--danger-color, #ef4444);
 }
 
 .nav-link.danger:hover {
-  background-color: rgba(255, 107, 107, 0.1);
-  color: #ff6b6b;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger-color, #ef4444);
 }
 
 .nav-icon {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -115,6 +131,7 @@ const handleClick = (event: Event) => {
 .nav-icon :deep(svg) {
   width: 100%;
   height: 100%;
+  stroke-width: 2.25;
 }
 
 .link-text {
@@ -124,7 +141,6 @@ const handleClick = (event: Event) => {
   flex: 1;
 }
 
-/* Стили для свернутого сайдбара */
 :deep(.sidebar.is-collapsed) .nav-link {
   justify-content: center;
   padding: 0.75rem;

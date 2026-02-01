@@ -79,13 +79,13 @@ const emit = defineEmits<{
   left: 0;
   top: 0;
   height: 100vh;
-  background-color: #1a1a1a;
-  border-right: 1px solid #333;
+  background-color: var(--sidebar-bg, #18181b);
+  border-right: 1px solid var(--border-color, #27272a);
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease-in-out;
+  transition: width var(--transition-speed, 0.3s) cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 100;
-  width: 260px;
+  width: 280px;
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -98,23 +98,21 @@ const emit = defineEmits<{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem;
-  border-bottom: 1px solid #333;
-  gap: 0.5rem;
+  padding: 1.5rem 1.25rem;
+  border-bottom: 1px solid var(--border-color, #27272a);
+  gap: 0.75rem;
   min-width: 0;
   flex-shrink: 0;
 }
 
-/* В свернутом состоянии делаем вертикальный layout */
 .sidebar.is-collapsed .sidebar-header {
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
   padding: 1.5rem 0.5rem 2rem;
   align-items: center;
   position: relative;
 }
 
-/* Убираем сжатие дочерних элементов в свернутом состоянии */
 .sidebar.is-collapsed .sidebar-header > * {
   flex-shrink: 0;
   position: relative;
@@ -122,8 +120,8 @@ const emit = defineEmits<{
 }
 
 .sidebar-footer {
-  padding: 1rem;
-  border-top: 1px solid #333;
+  padding: 1.25rem;
+  border-top: 1px solid var(--border-color, #27272a);
   margin-top: auto;
   min-width: 0;
   flex-shrink: 0;
@@ -132,19 +130,19 @@ const emit = defineEmits<{
   gap: 0.75rem;
 }
 
-/* В свернутом состоянии уменьшаем padding футера */
 .sidebar.is-collapsed .sidebar-footer {
-  padding: 0.5rem;
+  padding: 0.75rem;
 }
 
 .user-name {
   font-size: 0.875rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-  padding: 0.5rem 1rem;
+  color: var(--text-primary, rgba(255, 255, 255, 0.92));
+  padding: 0.625rem 1rem;
   text-align: center;
-  background-color: rgba(100, 108, 255, 0.1);
-  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(124, 58, 237, 0.05));
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: var(--radius-md, 12px);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -154,7 +152,6 @@ const emit = defineEmits<{
   flex-shrink: 0;
 }
 
-/* Скрываем текст в свернутом состоянии */
 .sidebar.is-collapsed :deep(.link-text),
 .sidebar.is-collapsed :deep(.logo-text) {
   opacity: 0;
@@ -162,17 +159,15 @@ const emit = defineEmits<{
   overflow: hidden;
 }
 
-/* Анимации */
 .sidebar :deep(.link-text),
 .sidebar :deep(.logo-text) {
   transition: opacity 0.2s ease-in-out, width 0.2s ease-in-out;
 }
 
-/* Мобильная адаптация */
 @media (max-width: 768px) {
   .sidebar {
     width: 100%;
-    max-width: 260px;
+    max-width: 280px;
     transform: translateX(0);
   }
 
