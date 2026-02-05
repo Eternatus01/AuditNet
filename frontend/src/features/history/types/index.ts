@@ -1,6 +1,34 @@
+export interface SecurityAuditData {
+  headers: Record<string, boolean | string>;
+  sensitive_files: Record<string, boolean>;
+  directory_listing: Record<string, boolean>;
+  scripts_info: Array<{
+    src: string;
+    crossorigin?: boolean;
+    integrity?: string;
+  }>;
+  robots_txt: boolean;
+  sitemap_xml: boolean;
+}
+
+export interface AuditRecommendation {
+  id: number;
+  category: string;
+  audit_id_key: string;
+  title: string;
+  description: string | null;
+  score: number;
+  score_display_mode: string | null;
+  display_value: string | null;
+  details: any;
+  numeric_value: number | null;
+  numeric_unit: string | null;
+}
+
 export interface Audit {
   id: number;
   url: string;
+  status: string;
   performance: number | null;
   accessibility: number | null;
   best_practices: number | null;
@@ -11,8 +39,11 @@ export interface Audit {
   fcp: number | null;
   tbt: number | null;
   speed_index: number | null;
+  audited_at: string | null;
   created_at: string;
   updated_at: string;
+  security_audit?: SecurityAuditData | null;
+  recommendations?: AuditRecommendation[];
 }
 
 export interface PaginationMeta {

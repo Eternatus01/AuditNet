@@ -5,6 +5,14 @@
       Анализ HTTP заголовков, чувствительных файлов и настроек безопасности
     </p>
 
+    <div class="info-notice security-notice">
+      <IconLucideAlertCircle class="notice-icon" />
+      <div class="notice-content">
+        <strong>Обратите внимание:</strong> Некоторые данные могут быть недоступны из-за настроек безопасности сайта 
+        (CORS, блокировка headless браузеров, защита от ботов). Отсутствие информации не всегда означает проблему.
+      </div>
+    </div>
+
     <div v-if="securityError" class="error-message mb-2">
       {{ securityError }}
     </div>
@@ -128,6 +136,7 @@ import IconLucideCheck from "~icons/lucide/check";
 import IconLucideX from "~icons/lucide/x";
 import IconLucideAlertTriangle from "~icons/lucide/alert-triangle";
 import IconLucideMinus from "~icons/lucide/minus";
+import IconLucideAlertCircle from "~icons/lucide/alert-circle";
 
 import type { SecurityAudit, AuditDescriptions } from "../types";
 

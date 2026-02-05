@@ -71,7 +71,7 @@ class SecurityAuditService
         try {
             $resp = Http::timeout(30)->get($url);
             if (preg_match_all('#<script[^>]+src="([^"]+)"#i', $resp->body(), $matches)) {
-                return $matches[1];
+                return array_map(fn($src) => ['src' => $src], $matches[1]);
             }
         } catch (\Exception $e) {
             Log::warning('Scripts extraction failed', ['error' => $e->getMessage()]);
@@ -115,9 +115,7 @@ class SecurityAuditService
         }
 
         $robotsIdx = $offset + count($dirs);
-        $robotsTxt = $responses[$robotsIdx] instanceof \Illuminate\Http\Client\Response && $responses[$robotsIdx]->ok()
-            ? $responses[$robotsIdx]->body()
-            : null;
+        $robotsTxt = $responses[$robotsIdx] instanceof \Illuminate\Http\Client\Response && $responses[$robotsIdx]->ok();
 
         $sitemapIdx = $robotsIdx + 1;
         $sitemapXml = $responses[$sitemapIdx] instanceof \Illuminate\Http\Client\Response && $responses[$sitemapIdx]->ok();

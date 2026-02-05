@@ -3,8 +3,8 @@
     <template v-if="!isAuthenticated">
       <SidebarNavItem
         to="/register"
-        label="Sign Up"
-        aria-label="Sign Up"
+        label="Регистрация"
+        aria-label="Регистрация"
         route-name="register"
       >
         <template #icon>
@@ -14,8 +14,8 @@
 
       <SidebarNavItem
         to="/login"
-        label="Login"
-        aria-label="Login"
+        label="Войти"
+        aria-label="Войти"
         route-name="login"
       >
         <template #icon>
@@ -27,8 +27,8 @@
     <template v-if="isAuthenticated">
       <SidebarNavItem
         to="/dashboard"
-        label="Dashboard"
-        aria-label="Dashboard"
+        label="Главная"
+        aria-label="Главная"
         route-name="dashboard"
       >
         <template #icon>
@@ -38,8 +38,8 @@
 
       <SidebarNavItem
         to="/history"
-        label="History"
-        aria-label="History"
+        label="История"
+        aria-label="История"
         route-name="history"
       >
         <template #icon>
@@ -48,9 +48,20 @@
       </SidebarNavItem>
 
       <SidebarNavItem
+        to="/analytics"
+        label="Аналитика"
+        aria-label="Аналитика"
+        route-name="analytics"
+      >
+        <template #icon>
+          <IconLucideTrendingUp />
+        </template>
+      </SidebarNavItem>
+
+      <SidebarNavItem
         to="/profile"
-        label="Profile"
-        aria-label="Profile"
+        label="Профиль"
+        aria-label="Профиль"
         route-name="profile"
       >
         <template #icon>
@@ -67,6 +78,7 @@ import IconLucideUserPlus from "~icons/lucide/user-plus";
 import IconLucideLogIn from "~icons/lucide/log-in";
 import IconLucideBarChart3 from "~icons/lucide/bar-chart-3";
 import IconLucideHistory from "~icons/lucide/history";
+import IconLucideTrendingUp from "~icons/lucide/trending-up";
 import IconLucideUser from "~icons/lucide/user";
 
 defineProps<{

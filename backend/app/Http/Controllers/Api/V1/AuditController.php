@@ -5,9 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\BaseApiController;
 use App\Http\Requests\AuditRequest;
 use App\Http\Resources\AuditResource;
-use App\Jobs\AnalyzeWebsiteJob;
 use App\Repositories\AuditRepository;
 use App\Services\Audit\AuditService;
+use App\Services\Audit\RecommendationParser;
+use App\Services\Security\SecurityAuditService;
 use App\Enums\AuditStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -16,7 +17,9 @@ class AuditController extends BaseApiController
 {
     public function __construct(
         private AuditRepository $auditRepository,
-        private AuditService $auditService
+        private AuditService $auditService,
+        private SecurityAuditService $securityAuditService,
+        private RecommendationParser $recommendationParser
     ) {}
 
     public function analyze(AuditRequest $request): JsonResponse
@@ -34,7 +37,9 @@ class AuditController extends BaseApiController
                 $this->auditRepository->updateAuditStatus($audit->id, AuditStatus::PROCESSING);
 
                 Log::info('Calling Lighthouse service', ['audit_id' => $audit->id]);
-                $result = $this->auditService->performAuditForJob($url);
+                $fullAudit = $this->auditService->performFullAudit($url);
+                $result = $fullAudit['result'];
+                $rawData = $fullAudit['rawData'];
                 Log::info('Lighthouse service completed', ['audit_id' => $audit->id]);
 
                 $this->auditRepository->updateAuditWithResults($audit->id, [
@@ -50,7 +55,51 @@ class AuditController extends BaseApiController
                     'speedIndex' => $result->speedIndex,
                 ]);
 
-                // Получаем обновленный аудит
+                try {
+                    Log::info('Starting security audit', ['audit_id' => $audit->id, 'url' => $url]);
+                    $securityResult = $this->securityAuditService->auditWebsite($url);
+                    
+                    $securityAudit = $audit->securityAudit()->create([
+                        'headers' => $securityResult->headers,
+                        'sensitive_files' => $securityResult->sensitiveFiles,
+                        'directory_listing' => $securityResult->directoryListing,
+                        'scripts_info' => $securityResult->scriptsInfo,
+                        'robots_txt' => $securityResult->robotsTxt,
+                        'sitemap_xml' => $securityResult->sitemapXml,
+                    ]);
+                    
+                    Log::info('Security audit saved successfully', [
+                        'audit_id' => $audit->id,
+                        'security_audit_id' => $securityAudit->id
+                    ]);
+                } catch (\Exception $securityError) {
+                    Log::error('Security audit failed', [
+                        'audit_id' => $audit->id,
+                        'error' => $securityError->getMessage(),
+                        'trace' => $securityError->getTraceAsString()
+                    ]);
+                }
+
+                try {
+                    Log::info('Parsing recommendations', ['audit_id' => $audit->id]);
+                    $recommendations = $this->recommendationParser->parse($rawData);
+                    
+                    foreach ($recommendations as $recommendation) {
+                        $audit->recommendations()->create($recommendation);
+                    }
+                    
+                    Log::info('Recommendations saved successfully', [
+                        'audit_id' => $audit->id,
+                        'count' => count($recommendations)
+                    ]);
+                } catch (\Exception $recommendationError) {
+                    Log::error('Recommendations parsing failed', [
+                        'audit_id' => $audit->id,
+                        'error' => $recommendationError->getMessage(),
+                        'trace' => $recommendationError->getTraceAsString()
+                    ]);
+                }
+
                 $completedAudit = $this->auditRepository->findById($audit->id);
 
                 return $this->successResponse(

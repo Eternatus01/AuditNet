@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Enums\AuditStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Audit extends Model
 {
@@ -44,5 +46,15 @@ class Audit extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function securityAudit(): HasOne
+    {
+        return $this->hasOne(SecurityAudit::class);
+    }
+
+    public function recommendations(): HasMany
+    {
+        return $this->hasMany(AuditRecommendation::class);
     }
 }

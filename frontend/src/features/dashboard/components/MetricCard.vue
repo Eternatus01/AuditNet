@@ -1,11 +1,17 @@
 <template>
   <div class="metric-card" :class="status">
+    <div class="status-indicator" :class="status"></div>
     <div class="metric-header">
-      <div class="metric-icon">
+      <div class="metric-icon" :class="status">
         <slot name="icon"></slot>
       </div>
-      <h3>{{ title }}</h3>
-      <span class="metric-badge" :class="status">{{ status }}</span>
+      <div class="metric-header-content">
+        <div class="metric-title-row">
+          <h3>{{ title }}</h3>
+          <span class="metric-badge" :class="status">{{ statusLabel }}</span>
+        </div>
+        <p class="metric-description">{{ fullName }}</p>
+      </div>
       <IconButton
         class="info-toggle"
         variant="ghost"
@@ -23,17 +29,17 @@
     <div class="metric-value">
       <span>{{ formattedValue }}</span>
     </div>
-    <p class="metric-description">{{ fullName }}</p>
     <p class="metric-threshold">{{ threshold }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { IconButton } from "@/shared/ui/atoms";
 import IconLucideChevronDown from "~icons/lucide/chevron-down";
 import type { MetricStatus } from "../types";
 
-defineProps<{
+const props = defineProps<{
   title: string;
   fullName: string;
   formattedValue: string;
@@ -46,4 +52,13 @@ defineProps<{
 defineEmits<{
   "toggle-info": [];
 }>();
+
+const statusLabel = computed(() => {
+  const labels: Record<MetricStatus, string> = {
+    'good': 'GOOD',
+    'poor': 'POOR',
+    'unknown': 'N/A'
+  };
+  return labels[props.status] || 'N/A';
+});
 </script>

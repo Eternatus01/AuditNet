@@ -11,17 +11,17 @@ class AuditRepository
 {
     public function findById(int $id): ?Audit
     {
-        return Audit::find($id);
+        return Audit::with(['securityAudit', 'recommendations'])->find($id);
     }
 
     public function findByIdForUser(int $id, User $user): ?Audit
     {
-        return $user->audits()->find($id);
+        return $user->audits()->with(['securityAudit', 'recommendations'])->find($id);
     }
 
     public function findByIdForUserOrFail(int $id, User $user): Audit
     {
-        return $user->audits()->findOrFail($id);
+        return $user->audits()->with(['securityAudit', 'recommendations'])->findOrFail($id);
     }
 
     public function getUserAuditsPaginated(User $user, int $perPage = 20): LengthAwarePaginator
@@ -88,5 +88,6 @@ class AuditRepository
             'error_message' => $errorMessage,
         ]);
     }
+
 }
 

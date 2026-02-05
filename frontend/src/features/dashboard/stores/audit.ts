@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useAuditApi } from "../composables/useAuditApi";
-import type { SecurityAudit, ScoreDisplay, AuditResource, AnalyzeWebsiteResponse } from "../types";
+import type { SecurityAudit, ScoreDisplay, AuditResource, AnalyzeWebsiteResponse, AuditRecommendation } from "../types";
 
 export const useAuditStore = defineStore("audit", () => {
   const auditApi = useAuditApi();
@@ -24,6 +24,7 @@ export const useAuditStore = defineStore("audit", () => {
   const speedIndex = ref<number | null>(null);
 
   const securityAudit = ref<SecurityAudit | null>(null);
+  const recommendations = ref<AuditRecommendation[]>([]);
 
   const resetMetrics = (): void => {
     error.value = null;
@@ -69,6 +70,7 @@ export const useAuditStore = defineStore("audit", () => {
         fcp.value = auditData.fcp ?? null;
         tbt.value = auditData.tbt ?? null;
         speedIndex.value = auditData.speed_index ?? null;
+        recommendations.value = auditData.recommendations || [];
 
         isLighthouseLoading.value = false;
         return response;
@@ -144,6 +146,7 @@ export const useAuditStore = defineStore("audit", () => {
     fcp.value = auditData.fcp ?? null;
     tbt.value = auditData.tbt ?? null;
     speedIndex.value = auditData.speed_index ?? null;
+    recommendations.value = auditData.recommendations || [];
 
     isLighthouseLoading.value = false;
     error.value = null;
@@ -175,6 +178,7 @@ export const useAuditStore = defineStore("audit", () => {
     fcp,
     tbt,
     speedIndex,
+    recommendations,
     isLighthouseLoading,
     isSecurityLoading,
     error,

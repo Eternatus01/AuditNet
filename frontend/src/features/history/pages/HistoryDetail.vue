@@ -64,6 +64,21 @@
           :is-expanded="isExpanded"
           @toggle="toggle"
         />
+
+        <SecuritySection
+          v-if="audit.security_audit"
+          :security-audit="audit.security_audit"
+          :security-error="''"
+          :is-security-ready="true"
+          :descriptions="descriptions"
+          :is-expanded="isExpanded"
+          @toggle="toggle"
+        />
+
+        <RecommendationsSection
+          v-if="audit.recommendations && audit.recommendations.length > 0"
+          :recommendations="audit.recommendations"
+        />
       </div>
     </div>
   </div>
@@ -81,6 +96,8 @@ import LoadingState from "@/shared/ui/molecules/LoadingState.vue";
 import type { Audit } from "../types";
 import ScoresSection from "@/features/dashboard/components/ScoresSection.vue";
 import CoreWebVitalsSection from "@/features/dashboard/components/CoreWebVitalsSection.vue";
+import SecuritySection from "@/features/dashboard/components/SecuritySection.vue";
+import RecommendationsSection from "@/features/dashboard/components/RecommendationsSection.vue";
 import IconLucideArrowLeft from "~icons/lucide/arrow-left";
 import IconLucideRefreshCw from "~icons/lucide/refresh-cw";
 

@@ -20,7 +20,7 @@
 <script lang="ts" setup>
 import { inject, ref, watch, onMounted, type Ref } from "vue";
 import { useAuthStore } from "@/features/auth/stores/auth";
-import Header from "../shared/ui/organism/Header.vue";
+import Header from "../shared/ui/organisms/Header.vue";
 
 const sidebarCollapsed = inject<Ref<boolean>>('sidebarCollapsed', { value: false } as Ref<boolean>);
 const authStore = useAuthStore();

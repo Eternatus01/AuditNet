@@ -18,33 +18,6 @@
     </div>
     <p class="section-subtitle">Ключевые метрики производительности от Google</p>
 
-    <!-- Gauge Charts -->
-    <div class="gauges-container">
-      <GaugeChart
-        metric-name="LCP"
-        :value="lcp"
-        :good-threshold="2.5"
-        :poor-threshold="4.0"
-        unit="s"
-        :formatter="(val) => val?.toFixed(2) || 'N/A'"
-      />
-      <GaugeChart
-        metric-name="FID"
-        :value="fid"
-        :good-threshold="100"
-        :poor-threshold="300"
-        unit="ms"
-        :formatter="(val) => val?.toFixed(0) || 'N/A'"
-      />
-      <GaugeChart
-        metric-name="CLS"
-        :value="cls"
-        :good-threshold="0.1"
-        :poor-threshold="0.25"
-        :formatter="(val) => val?.toFixed(3) || 'N/A'"
-      />
-    </div>
-
     <!-- Metric Cards Grid -->
     <div class="metrics-grid">
       <MetricCard
@@ -98,7 +71,6 @@
 <script setup lang="ts">
 import MetricCard from "./MetricCard.vue";
 import { IconButton } from "@/shared/ui/atoms";
-import { GaugeChart } from "@/shared/ui/molecules";
 import { formatLCP, formatFID, formatCLS } from "@/shared/utils/formatters";
 import { getMetricStatus } from "@/shared/utils/metrics";
 import IconLucideChevronDown from "~icons/lucide/chevron-down";
@@ -143,50 +115,9 @@ const onToggle = (_key: string) => {
   margin: 0 auto 1rem;
 }
 
-.gauges-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  place-items: center;
-  gap: 2rem;
-  margin: 2rem 0;
-  padding: 2.5rem 2rem;
-  background: linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(30, 30, 40, 0.95) 100%);
-  border: 1px solid rgba(100, 108, 255, 0.2);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  position: relative;
-  overflow: hidden;
-}
-
-.gauges-container::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(100, 108, 255, 0.5) 50%,
-    transparent 100%
-  );
-}
-
-@media (max-width: 1100px) {
-  .gauges-container {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    padding: 2rem 1rem;
-  }
-}
-
 @media (max-width: 768px) {
-  .gauges-container {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-    padding: 1.5rem 1rem;
-    border-radius: 12px;
+  .section-header {
+    gap: 0.5rem;
   }
 }
 </style>

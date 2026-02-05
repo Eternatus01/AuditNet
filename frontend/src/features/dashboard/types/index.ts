@@ -25,6 +25,20 @@ export interface AuditJobResponse {
   url: string;
 }
 
+export interface AuditRecommendation {
+  id: number;
+  category: string;
+  audit_id_key: string;
+  title: string;
+  description: string | null;
+  score: number;
+  score_display_mode: string | null;
+  display_value: string | null;
+  details: any;
+  numeric_value: number | null;
+  numeric_unit: string | null;
+}
+
 export interface AuditResource {
   id: number;
   user_id: number;
@@ -44,6 +58,7 @@ export interface AuditResource {
   audited_at: string | null;
   created_at: string;
   updated_at: string;
+  recommendations?: AuditRecommendation[];
 }
 
 export interface AuditStatusResponse {

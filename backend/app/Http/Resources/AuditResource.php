@@ -28,6 +28,33 @@ class AuditResource extends JsonResource
             'audited_at' => $this->audited_at?->toIso8601String(),
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),
+            'security_audit' => $this->whenLoaded('securityAudit', function () {
+                return $this->securityAudit ? [
+                    'headers' => $this->securityAudit->headers,
+                    'sensitive_files' => $this->securityAudit->sensitive_files,
+                    'directory_listing' => $this->securityAudit->directory_listing,
+                    'scripts_info' => $this->securityAudit->scripts_info,
+                    'robots_txt' => $this->securityAudit->robots_txt,
+                    'sitemap_xml' => $this->securityAudit->sitemap_xml,
+                ] : null;
+            }),
+            'recommendations' => $this->whenLoaded('recommendations', function () {
+                return $this->recommendations->map(function ($rec) {
+                    return [
+                        'id' => $rec->id,
+                        'category' => $rec->category,
+                        'audit_id_key' => $rec->audit_id_key,
+                        'title' => $rec->title,
+                        'description' => $rec->description,
+                        'score' => $rec->score,
+                        'score_display_mode' => $rec->score_display_mode,
+                        'display_value' => $rec->display_value,
+                        'details' => $rec->details,
+                        'numeric_value' => $rec->numeric_value,
+                        'numeric_unit' => $rec->numeric_unit,
+                    ];
+                });
+            }),
         ];
     }
 }

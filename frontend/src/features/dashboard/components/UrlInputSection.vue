@@ -56,13 +56,26 @@ const isValid = ref(false);
 
 const debouncedValue = useDebounce(localValue, 500);
 
+const normalizeUrl = (url: string): string => {
+  if (!url) return url;
+  
+  const trimmed = url.trim();
+  
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  
+  return `https://${trimmed}`;
+};
+
 const validateUrl = (url: string): { valid: boolean; error: string | null } => {
   if (!url) {
     return { valid: false, error: null };
   }
 
   try {
-    const urlObj = new URL(url);
+    const normalizedUrl = normalizeUrl(url);
+    const urlObj = new URL(normalizedUrl);
 
     if (!["http:", "https:"].includes(urlObj.protocol)) {
       return {
@@ -90,11 +103,23 @@ const validateUrl = (url: string): { valid: boolean; error: string | null } => {
 const handleInput = (event: InputEvent) => {
   const value = (event.target as HTMLInputElement).value;
   localValue.value = value;
-  emit("update:modelValue", value);
 
   if (!value) {
     validationError.value = null;
     isValid.value = false;
+    emit("update:modelValue", value);
+    return;
+  }
+
+  const normalizedUrl = normalizeUrl(value);
+  const result = validateUrl(normalizedUrl);
+  
+  if (result.valid) {
+    emit("update:modelValue", normalizedUrl);
+    validationError.value = null;
+    isValid.value = true;
+  } else {
+    emit("update:modelValue", value);
   }
 };
 

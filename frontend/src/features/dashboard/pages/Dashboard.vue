@@ -5,13 +5,9 @@
       <p class="dashboard-subtitle">
         Введите URL сайта для анализа производительности
       </p>
-      <p class="dashboard-subtitle">
-        Примеры сайтов для анализа:
-        <ul>
-          <li>https://www.google.com</li>
-          <li>http://testphp.vulnweb.com</li>
-        </ul>
-      </p>
+      <div class="examples-hint">
+        Например: <span class="hint-url">google.com</span> или <span class="hint-url">github.com</span>
+      </div>
     </div>
 
     <UrlInputSection
@@ -61,6 +57,11 @@
       @toggle="toggleInfo"
     />
 
+    <RecommendationsSection
+      v-if="recommendations && recommendations.length > 0"
+      :recommendations="recommendations"
+    />
+
     <div v-if="error" class="error-message">
       {{ error }}
     </div>
@@ -79,6 +80,7 @@ import UrlInputSection from "../components/UrlInputSection.vue";
 import ScoresSection from "../components/ScoresSection.vue";
 import CoreWebVitalsSection from "../components/CoreWebVitalsSection.vue";
 import SecuritySection from "../components/SecuritySection.vue";
+import RecommendationsSection from "../components/RecommendationsSection.vue";
 
 const POLLING_INTERVAL_MS = 10000;
 const MAX_POLLING_ATTEMPTS = 30;
@@ -112,6 +114,9 @@ const {
   
   // Security
   securityAudit,
+  
+  // Recommendations
+  recommendations,
 } = storeToRefs(auditStore);
 
 const websiteUrl = ref("");

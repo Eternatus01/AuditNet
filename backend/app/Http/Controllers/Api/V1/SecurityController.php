@@ -37,8 +37,8 @@ class SecurityController extends BaseApiController
                 'headers' => $result->headers,
                 'sensitive_files' => $result->sensitiveFiles,
                 'directory_listing' => $result->directoryListing,
-                'robots_txt' => $result->robotsTxt,
-                'sitemap_xml' => $result->sitemapXml,
+                'robots_txt' => (bool) $result->robotsTxt,
+                'sitemap_xml' => (bool) $result->sitemapXml,
                 'scripts_info' => $result->scriptsInfo,
             ]);
 

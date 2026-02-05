@@ -27,8 +27,8 @@
       </div>
       <SidebarNavItem
         is-button
-        label="Logout"
-        aria-label="Logout from account"
+        label="Выход"
+        aria-label="Выйти из аккаунта"
         variant="danger"
         @click="emit('logout')"
       >
