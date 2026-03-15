@@ -7,7 +7,25 @@ const PORT = 3000;
 async function runLighthouse(url) {
   const chrome = await chromeLauncher.launch({
     chromePath: "/usr/bin/chromium-browser",
-    chromeFlags: ["--headless", "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage"],
+    chromeFlags: [
+      "--headless",
+      "--no-sandbox",
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+      "--disable-software-rasterizer",
+      "--disable-extensions",
+      "--disable-setuid-sandbox",
+      "--no-first-run",
+      "--no-zygote",
+      "--single-process",
+      "--disable-background-networking",
+      "--disable-default-apps",
+      "--disable-sync",
+      "--metrics-recording-only",
+      "--mute-audio",
+      "--no-default-browser-check",
+      "--disable-web-security",
+    ],
   });
 
   const options = {
@@ -17,6 +35,11 @@ async function runLighthouse(url) {
     port: chrome.port,
     maxWaitForLoad: 45000,
     maxWaitForFcp: 30000,
+    throttling: {
+      rttMs: 40,
+      throughputKbps: 10 * 1024,
+      cpuSlowdownMultiplier: 1,
+    },
   };
 
   try {
