@@ -13,8 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Добавляем наш кастомный CORS middleware первым
-        $middleware->prepend(\App\Http\Middleware\CustomCors::class);
+        // CORS должен быть самым первым для ВСЕХ запросов
+        $middleware->use([
+            \App\Http\Middleware\CustomCors::class,
+        ]);
         
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
