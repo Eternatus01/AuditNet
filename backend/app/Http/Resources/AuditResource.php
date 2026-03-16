@@ -38,22 +38,21 @@ class AuditResource extends JsonResource
                     'sitemap_xml' => $this->securityAudit->sitemap_xml,
                 ] : null;
             }),
-            'recommendations' => $this->whenLoaded('recommendations', function () {
-                return $this->recommendations->map(function ($rec) {
-                    return [
-                        'id' => $rec->id,
-                        'category' => $rec->category,
-                        'audit_id_key' => $rec->audit_id_key,
-                        'title' => $rec->title,
-                        'description' => $rec->description,
-                        'score' => $rec->score,
-                        'score_display_mode' => $rec->score_display_mode,
-                        'display_value' => $rec->display_value,
-                        'details' => $rec->details,
-                        'numeric_value' => $rec->numeric_value,
-                        'numeric_unit' => $rec->numeric_unit,
-                    ];
-                });
+            // ВСЕГДА загружаем recommendations!
+            'recommendations' => $this->recommendations->map(function ($rec) {
+                return [
+                    'id' => $rec->id,
+                    'category' => $rec->category,
+                    'audit_id_key' => $rec->audit_id_key,
+                    'title' => $rec->title,
+                    'description' => $rec->description,
+                    'score' => $rec->score,
+                    'score_display_mode' => $rec->score_display_mode,
+                    'display_value' => $rec->display_value,
+                    'details' => $rec->details,
+                    'numeric_value' => $rec->numeric_value,
+                    'numeric_unit' => $rec->numeric_unit,
+                ];
             }),
         ];
     }
