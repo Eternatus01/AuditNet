@@ -43,6 +43,13 @@ async function runLighthouse(url) {
 }
 
 const server = http.createServer(async (req, res) => {
+  // Health check endpoint - ПЕРВЫМ!
+  if (req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }));
+    return;
+  }
+  
   req.setTimeout(180000); // 3 минуты
   res.setTimeout(180000);
   
@@ -52,13 +59,6 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Content-Type', 'application/json');
 
-  // Health check endpoint
-  if (req.method === 'GET' && req.url === '/health') {
-    res.writeHead(200);
-    res.end(JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }));
-    return;
-  }
-
   // Обработка OPTIONS запроса
   if (req.method === 'OPTIONS') {
     res.writeHead(200);
@@ -66,10 +66,10 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Только POST запросы
+  // Только POST запросы для анализа
   if (req.method !== 'POST') {
     res.writeHead(405);
-    res.end(JSON.stringify({ error: 'Method not allowed. Use POST.' }));
+    res.end(JSON.stringify({ error: 'Method not allowed. Use POST for analysis.' }));
     return;
   }
 
