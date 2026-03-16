@@ -15,7 +15,7 @@ services:
       - DB_PORT=3306
       - DB_DATABASE=auditnet_db
       - DB_USERNAME=audituser
-      - DB_PASSWORD=secret
+      - DB_PASSWORD=secret_vps_password_2026
     depends_on:
       - db
       - lighthouse
@@ -37,7 +37,7 @@ services:
       - DB_PORT=3306
       - DB_DATABASE=auditnet_db
       - DB_USERNAME=audituser
-      - DB_PASSWORD=secret
+      - DB_PASSWORD=secret_vps_password_2026
     depends_on:
       - db
       - backend
@@ -70,8 +70,8 @@ services:
     environment:
       - MYSQL_DATABASE=auditnet_db
       - MYSQL_USER=audituser
-      - MYSQL_PASSWORD=secret
-      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_PASSWORD=secret_vps_password_2026
+      - MYSQL_ROOT_PASSWORD=secret_vps_password_2026
     ports:
       - "3306:3306"
     volumes:
@@ -82,7 +82,7 @@ services:
     environment:
       - PMA_HOST=db
       - PMA_USER=audituser
-      - PMA_PASSWORD=secret
+      - PMA_PASSWORD=secret_vps_password_2026
     ports:
       - "8080:80"
     depends_on:
