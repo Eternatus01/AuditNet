@@ -94,8 +94,10 @@ class SecurityAuditService
         $sensitiveFiles = [];
         foreach ($sensitivePaths as $idx => $path) {
             $resp = $responses[$idx];
+            // true = файл ДОСТУПЕН (плохо!)
+            // false = файл НЕ доступен или не существует (хорошо!)
             $sensitiveFiles[$path] = $resp instanceof \Illuminate\Http\Client\Response
-                ? in_array($resp->status(), [200, 401, 403])
+                ? $resp->status() === 200  // Только 200 = реально доступен
                 : false;
         }
 

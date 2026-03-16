@@ -56,11 +56,17 @@ export const useAuthStore = defineStore("auth", () => {
 
   const logout = async (): Promise<void> => {
     try {
-      error.value = null;
-      await authApi.logout();
+      // Сразу очищаем локальное состояние, не дожидаясь ответа от Backend
       tokenStorage.remove();
       user.value = null;
+      error.value = null;
+      
+      // Отправляем запрос на Backend в фоне (без await)
+      authApi.logout().catch(() => {
+        // Игнорируем ошибки, т.к. пользователь уже вышел локально
+      });
     } catch (e: unknown) {
+      // На всякий случай очищаем состояние даже при ошибке
       tokenStorage.remove();
       user.value = null;
       if (e instanceof Error) {

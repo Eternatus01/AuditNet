@@ -32,6 +32,17 @@ async function runLighthouse(url) {
     port: chrome.port,
     maxWaitForLoad: 45000,
     maxWaitForFcp: 30000,
+    // Отключаем throttling для более быстрых результатов
+    throttlingMethod: 'provided',
+    // Используем настройки для Desktop вместо Mobile
+    formFactor: 'desktop',
+    screenEmulation: {
+      mobile: false,
+      width: 1350,
+      height: 940,
+      deviceScaleFactor: 1,
+      disabled: false,
+    },
   };
 
   try {

@@ -39,7 +39,10 @@ export const useAuthApi = () => {
         throw new Error(error.response?.data?.message || "Неверный email или пароль");
       }
 
-      return handleApiError(error, "Ошибка авторизации");
+      handleApiError(error, "Ошибка авторизации");
+      // TypeScript не знает, что handleApiError выбрасывает ошибку,
+      // поэтому добавляем этот недостижимый код для типов
+      throw new Error("Ошибка авторизации");
     }
   };
 
