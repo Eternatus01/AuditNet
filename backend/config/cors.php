@@ -22,10 +22,14 @@ return [
     'allowed_origins' => [
         env('FRONTEND_URL', 'http://localhost:5173'),
         'https://auditnet.onrender.com',
+        'http://91.142.74.132',
+        'http://91.142.74.132:5173',
+        'http://91.142.74.132:8000',
     ],
 
     'allowed_origins_patterns' => [
         '/\.onrender\.com$/',
+        '/^http:\/\/91\.142\.74\.132(:\d+)?$/',
     ],
 
     'allowed_headers' => ['*'],
