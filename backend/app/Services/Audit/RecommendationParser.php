@@ -74,35 +74,44 @@ class RecommendationParser
         ]);
         
         $recommendations = [];
-        $counter = 0;
 
-        // Берём первые 20 любых аудитов с score < 1.0
-        foreach ($audits as $auditKey => $audit) {
-            if ($counter >= 20) break;
-            
-            $score = $audit['score'] ?? null;
-            
-            // Пропускаем только идеальные (score = 1.0)
-            if ($score !== null && $score >= 1.0) {
-                continue;
+        foreach (self::IMPORTANT_AUDITS as $category => $auditKeys) {
+            foreach ($auditKeys as $auditKey) {
+                if (!isset($audits[$auditKey])) {
+                    continue;
+                }
+
+                $audit = $audits[$auditKey];
+                $score = $audit['score'] ?? null;
+
+                // Показываем ВСЕ проблемные аудиты (score < 0.9 = < 90%)
+                if ($score !== null && $score >= 0.9) {
+                    continue;
+                }
+
+                $details = isset($audit['details']) ? $this->extractImportantDetails($audit['details']) : null;
+                $displayValue = $this->formatDisplayValue($audit, $details);
+
+                $recommendation = [
+                    'category' => $category,
+                    'audit_id_key' => $auditKey,
+                    'title' => $audit['title'] ?? '',
+                    'description' => $audit['description'] ?? null,
+                    'score' => $score,
+                    'score_display_mode' => $audit['scoreDisplayMode'] ?? null,
+                    'display_value' => $displayValue,
+                    'numeric_value' => $audit['numericValue'] ?? null,
+                    'numeric_unit' => $audit['numericUnit'] ?? null,
+                    'details' => $details,
+                ];
+
+                $recommendations[] = $recommendation;
             }
-            
-            $recommendation = [
-                'category' => 'performance',
-                'audit_id_key' => $auditKey,
-                'title' => $audit['title'] ?? $auditKey,
-                'description' => substr($audit['description'] ?? '', 0, 500),
-                'score' => $score,
-                'score_display_mode' => $audit['scoreDisplayMode'] ?? null,
-                'display_value' => $audit['displayValue'] ?? null,
-                'numeric_value' => $audit['numericValue'] ?? null,
-                'numeric_unit' => $audit['numericUnit'] ?? null,
-                'details' => null,
-            ];
-
-            $recommendations[] = $recommendation;
-            $counter++;
         }
+
+        usort($recommendations, function ($a, $b) {
+            return ($a['score'] ?? 1) <=> ($b['score'] ?? 1);
+        });
 
         \Log::info('RecommendationParser: Finished', [
             'recommendations_count' => count($recommendations)
