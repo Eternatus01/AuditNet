@@ -81,10 +81,10 @@ class RecommendationParser
                 $audit = $audits[$auditKey];
                 $score = $audit['score'] ?? null;
 
-                // Пропускаем только идеальные аудиты (score = 1.0)
-                if ($score !== null && $score >= 1.0) {
-                    continue;
-                }
+                // Убираем фильтр - показываем ВСЕ аудиты
+                // if ($score !== null && $score >= 1.0) {
+                //     continue;
+                // }
 
                 $details = isset($audit['details']) ? $this->extractImportantDetails($audit['details']) : null;
 
