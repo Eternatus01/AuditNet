@@ -81,7 +81,8 @@ class RecommendationParser
                 $audit = $audits[$auditKey];
                 $score = $audit['score'] ?? null;
 
-                if ($score === null || $score >= 0.9) {
+                // Пропускаем только идеальные аудиты (score = 1.0)
+                if ($score !== null && $score >= 1.0) {
                     continue;
                 }
 
