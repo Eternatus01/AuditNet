@@ -7,6 +7,16 @@ use App\Http\Controllers\Api\V1\AuditController;
 use App\Http\Controllers\Api\V1\SecurityController;
 use App\Http\Resources\UserResource;
 
+// Обработчик для всех OPTIONS запросов (CORS preflight)
+Route::options('{any}', function () {
+    return response('', 200)
+        ->header('Access-Control-Allow-Origin', request()->header('Origin') ?: '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin')
+        ->header('Access-Control-Allow-Credentials', 'true')
+        ->header('Access-Control-Max-Age', '86400');
+})->where('any', '.*');
+
 Route::get('/health', function () {
     return response()->json([
         'status' => 'ok',
