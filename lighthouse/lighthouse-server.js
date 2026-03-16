@@ -32,9 +32,8 @@ async function runLighthouse(url) {
     port: chrome.port,
     maxWaitForLoad: 45000,
     maxWaitForFcp: 30000,
-    // Отключаем throttling для более быстрых результатов
-    throttlingMethod: 'provided',
-    // Используем настройки для Desktop вместо Mobile
+    
+    // Desktop конфигурация (вместо Mobile)
     formFactor: 'desktop',
     screenEmulation: {
       mobile: false,
@@ -43,6 +42,20 @@ async function runLighthouse(url) {
       deviceScaleFactor: 1,
       disabled: false,
     },
+    
+    // ПОЛНОСТЬЮ отключаем throttling (эмуляцию медленной сети/CPU)
+    throttlingMethod: 'provided',
+    throttling: {
+      rttMs: 0,            // Нет задержки сети
+      throughputKbps: 0,   // Безлимитная пропускная способность
+      requestLatencyMs: 0, // Нет задержки запросов
+      downloadThroughputKbps: 0,
+      uploadThroughputKbps: 0,
+      cpuSlowdownMultiplier: 1, // НЕ замедляем CPU (1x = реальная скорость)
+    },
+    
+    // Используем реальную сеть и CPU сервера
+    emulatedUserAgent: false,
   };
 
   try {
