@@ -25,8 +25,8 @@ header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-W
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Max-Age: 86400");
 
-// Обработка OPTIONS запроса (preflight)
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+// Обработка ТОЛЬКО OPTIONS запроса (preflight) для API роутов
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS' && strpos($_SERVER['REQUEST_URI'], '/api/') === 0) {
     http_response_code(200);
     exit;
 }
