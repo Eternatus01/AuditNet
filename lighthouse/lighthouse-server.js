@@ -22,6 +22,28 @@ async function runLighthouse(url) {
       "--metrics-recording-only",
       "--mute-audio",
       "--no-default-browser-check",
+      "--disable-features=TranslateUI",
+      "--disable-ipc-flooding-protection",
+      "--disable-renderer-backgrounding",
+      "--disable-backgrounding-occluded-windows",
+      "--disable-client-side-phishing-detection",
+      "--disable-component-update",
+      "--disable-default-apps",
+      "--disable-domain-reliability",
+      "--disable-features=AudioServiceOutOfProcess",
+      "--disable-hang-monitor",
+      "--disable-popup-blocking",
+      "--disable-prompt-on-repost",
+      "--disable-sync",
+      "--enable-automation",
+      "--enable-features=NetworkService,NetworkServiceInProcess",
+      "--force-color-profile=srgb",
+      "--metrics-recording-only",
+      "--no-default-browser-check",
+      "--no-first-run",
+      "--password-store=basic",
+      "--use-mock-keychain",
+      "--disable-blink-features=AutomationControlled",
     ],
   });
 
@@ -30,8 +52,10 @@ async function runLighthouse(url) {
     output: "json",
     onlyCategories: ["performance", "accessibility", "best-practices", "seo"],
     port: chrome.port,
-    maxWaitForLoad: 45000,
-    maxWaitForFcp: 30000,
+    
+    // Уменьшенные таймауты для быстрой загрузки
+    maxWaitForLoad: 30000,  // 30 сек вместо 45
+    maxWaitForFcp: 15000,   // 15 сек вместо 30
     
     // Desktop конфигурация (вместо Mobile)
     formFactor: 'desktop',
@@ -56,6 +80,9 @@ async function runLighthouse(url) {
     
     // Используем реальную сеть и CPU сервера
     emulatedUserAgent: false,
+    
+    // Пропускаем некоторые долгие проверки
+    skipAudits: ['screenshot-thumbnails', 'final-screenshot'],
   };
 
   try {
