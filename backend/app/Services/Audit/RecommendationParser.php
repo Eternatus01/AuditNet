@@ -86,10 +86,6 @@ class RecommendationParser
                 }
 
                 $details = isset($audit['details']) ? $this->extractImportantDetails($audit['details']) : null;
-                
-                if (!$this->hasUsefulData($audit, $details)) {
-                    continue;
-                }
 
                 $displayValue = $this->formatDisplayValue($audit, $details);
 
