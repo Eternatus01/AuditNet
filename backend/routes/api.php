@@ -7,15 +7,6 @@ use App\Http\Controllers\Api\V1\AuditController;
 use App\Http\Controllers\Api\V1\SecurityController;
 use App\Http\Resources\UserResource;
 
-// Обработчик для всех OPTIONS запросов (CORS preflight)
-Route::options('{any}', function () {
-    return response('', 200)
-        ->header('Access-Control-Allow-Origin', request()->header('Origin') ?: '*')
-        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-        ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin')
-        ->header('Access-Control-Allow-Credentials', 'true')
-        ->header('Access-Control-Max-Age', '86400');
-})->where('any', '.*');
 
 Route::get('/health', function () {
     return response()->json([
@@ -51,25 +42,6 @@ Route::prefix('audit')->middleware(['throttle:api', 'auth:sanctum'])->group(func
     Route::get('/history', [AuditController::class, 'history']);
     Route::get('/history/{id}', [AuditController::class, 'show']);
     Route::get('/status/{id}', [AuditController::class, 'status']);
-    
-    // Debug endpoint
-    Route::get('/debug/recommendations/{id}', function($id) {
-        $audit = \App\Models\Audit::with('recommendations')->find($id);
-        if (!$audit) {
-            return response()->json(['error' => 'Audit not found'], 404);
-        }
-        return response()->json([
-            'audit_id' => $audit->id,
-            'url' => $audit->url,
-            'recommendations_count' => $audit->recommendations->count(),
-            'recommendations' => $audit->recommendations->map(fn($r) => [
-                'id' => $r->id,
-                'category' => $r->category,
-                'title' => $r->title,
-                'score' => $r->score,
-            ])
-        ]);
-    });
 });
 
 

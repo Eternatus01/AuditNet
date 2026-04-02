@@ -4,7 +4,6 @@ namespace App\Services\Security;
 
 use App\DTOs\SecurityAuditResultDTO;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class SecurityAuditService
 {
@@ -61,7 +60,6 @@ class SecurityAuditService
 
             return $result;
         } catch (\Exception $e) {
-            Log::warning('Headers check failed', ['error' => $e->getMessage()]);
             return [];
         }
     }
@@ -74,7 +72,7 @@ class SecurityAuditService
                 return array_map(fn($src) => ['src' => $src], $matches[1]);
             }
         } catch (\Exception $e) {
-            Log::warning('Scripts extraction failed', ['error' => $e->getMessage()]);
+            // игнорируем, возвращаем пустой массив
         }
         return [];
     }
@@ -94,10 +92,8 @@ class SecurityAuditService
         $sensitiveFiles = [];
         foreach ($sensitivePaths as $idx => $path) {
             $resp = $responses[$idx];
-            // true = файл ДОСТУПЕН (плохо!)
-            // false = файл НЕ доступен или не существует (хорошо!)
             $sensitiveFiles[$path] = $resp instanceof \Illuminate\Http\Client\Response
-                ? $resp->status() === 200  // Только 200 = реально доступен
+                ? $resp->status() === 200
                 : false;
         }
 

@@ -11,7 +11,6 @@ use App\Services\Audit\RecommendationParser;
 use App\Services\Security\SecurityAuditService;
 use App\Enums\AuditStatus;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
 
 class AuditController extends BaseApiController
 {
@@ -28,19 +27,14 @@ class AuditController extends BaseApiController
             $url = $request->input('url');
             $user = $this->requireAuthenticatedUser();
 
-            Log::info('Starting audit', ['url' => $url, 'user_id' => $user->id]);
-
             $audit = $this->auditRepository->createPendingAudit($url, $user->id);
 
-            // Выполняем анализ синхронно (для бесплатного плана Render без queue worker)
             try {
                 $this->auditRepository->updateAuditStatus($audit->id, AuditStatus::PROCESSING);
 
-                Log::info('Calling Lighthouse service', ['audit_id' => $audit->id]);
                 $fullAudit = $this->auditService->performFullAudit($url);
                 $result = $fullAudit['result'];
                 $rawData = $fullAudit['rawData'];
-                Log::info('Lighthouse service completed', ['audit_id' => $audit->id]);
 
                 $this->auditRepository->updateAuditWithResults($audit->id, [
                     'performance' => $result->performance,
@@ -56,10 +50,9 @@ class AuditController extends BaseApiController
                 ]);
 
                 try {
-                    Log::info('Starting security audit', ['audit_id' => $audit->id, 'url' => $url]);
                     $securityResult = $this->securityAuditService->auditWebsite($url);
                     
-                    $securityAudit = $audit->securityAudit()->create([
+                    $audit->securityAudit()->create([
                         'headers' => $securityResult->headers,
                         'sensitive_files' => $securityResult->sensitiveFiles,
                         'directory_listing' => $securityResult->directoryListing,
@@ -67,37 +60,18 @@ class AuditController extends BaseApiController
                         'robots_txt' => $securityResult->robotsTxt,
                         'sitemap_xml' => $securityResult->sitemapXml,
                     ]);
-                    
-                    Log::info('Security audit saved successfully', [
-                        'audit_id' => $audit->id,
-                        'security_audit_id' => $securityAudit->id
-                    ]);
                 } catch (\Exception $securityError) {
-                    Log::error('Security audit failed', [
-                        'audit_id' => $audit->id,
-                        'error' => $securityError->getMessage(),
-                        'trace' => $securityError->getTraceAsString()
-                    ]);
+                    // не блокируем основной аудит при сбое security-проверки
                 }
 
                 try {
-                    Log::info('Parsing recommendations', ['audit_id' => $audit->id]);
                     $recommendations = $this->recommendationParser->parse($rawData);
                     
                     foreach ($recommendations as $recommendation) {
                         $audit->recommendations()->create($recommendation);
                     }
-                    
-                    Log::info('Recommendations saved successfully', [
-                        'audit_id' => $audit->id,
-                        'count' => count($recommendations)
-                    ]);
                 } catch (\Exception $recommendationError) {
-                    Log::error('Recommendations parsing failed', [
-                        'audit_id' => $audit->id,
-                        'error' => $recommendationError->getMessage(),
-                        'trace' => $recommendationError->getTraceAsString()
-                    ]);
+                    // не блокируем основной аудит при сбое парсинга рекомендаций
                 }
 
                 $completedAudit = $this->auditRepository->findById($audit->id);
@@ -109,13 +83,6 @@ class AuditController extends BaseApiController
 
             } catch (\Exception $e) {
                 $this->auditRepository->markAuditAsFailed($audit->id, $e->getMessage());
-                
-                Log::error('Audit analysis error', [
-                    'auditId' => $audit->id,
-                    'url' => $url,
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
 
                 $errorMessage = 'Ошибка при анализе';
                 if (str_contains($e->getMessage(), 'Lighthouse')) {
@@ -128,7 +95,6 @@ class AuditController extends BaseApiController
             }
 
         } catch (\Exception $e) {
-            Log::error('Lighthouse audit dispatch error', ['message' => $e->getMessage()]);
             return $this->errorResponse('Ошибка при запуске анализа. Попробуйте позже.', 500);
         }
     }
@@ -149,7 +115,6 @@ class AuditController extends BaseApiController
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Audit history error', ['message' => $e->getMessage()]);
             return $this->errorResponse('Ошибка при получении истории аудитов.', 500);
         }
     }

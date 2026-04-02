@@ -28,27 +28,5 @@ export const logger: Logger = {
   error: createLogFunction("error", true),
 };
 
-export const logGroup = (label: string, callback: () => void): void => {
-  if (isDevelopment) {
-    console.group(label);
-    callback();
-    console.groupEnd();
-  }
-};
-
-export const logTime = (label: string): (() => void) => {
-  if (isDevelopment) {
-    console.time(label);
-    return () => console.timeEnd(label);
-  }
-  return () => {};
-};
-
-export const logTable = (data: unknown): void => {
-  if (isDevelopment && console.table) {
-    console.table(data);
-  }
-};
-
 export default logger;
 

@@ -8,7 +8,6 @@ use App\Http\Requests\LoginUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class AuthController extends BaseApiController
 {
@@ -31,7 +30,6 @@ class AuthController extends BaseApiController
                 'expires_at' => now()->addDays(7)->toIso8601String()
             ], null, 201);
         } catch (\Exception $e) {
-            Log::error('Registration error', ['error' => $e->getMessage()]);
             return $this->errorResponse('Ошибка регистрации. Попробуйте позже.', 500);
         }
     }
@@ -47,10 +45,8 @@ class AuthController extends BaseApiController
 
             $user = Auth::user();
 
-            // Удаляем старые токены
             $user->tokens()->delete();
 
-            // Создаём новый токен с expiration
             $token = $user->createToken(
                 'auth-token',
                 ['*'],
@@ -64,11 +60,6 @@ class AuthController extends BaseApiController
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Login error', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
             return $this->errorResponse('Ошибка при попытке входа. Попробуйте позднее.', 500);
         }
     }
@@ -76,12 +67,10 @@ class AuthController extends BaseApiController
     public function logout()
     {
         try {
-            // Удаляем текущий токен
             Auth::user()->currentAccessToken()->delete();
 
             return $this->successResponse(null, 'Вы успешно вышли');
         } catch (\Exception $e) {
-            Log::error('Logout error', ['error' => $e->getMessage()]);
             return $this->errorResponse('Ошибка выхода. Попробуйте позже.', 500);
         }
     }

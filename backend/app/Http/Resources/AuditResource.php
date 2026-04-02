@@ -38,7 +38,6 @@ class AuditResource extends JsonResource
                     'sitemap_xml' => $this->securityAudit->sitemap_xml,
                 ] : null;
             }),
-            // ВСЕГДА загружаем recommendations!
             'recommendations' => $this->recommendations->map(function ($rec) {
                 return [
                     'id' => $rec->id,

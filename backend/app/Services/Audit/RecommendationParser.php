@@ -68,11 +68,6 @@ class RecommendationParser
     public function parse(array $lighthouseData): array
     {
         $audits = $lighthouseData['audits'] ?? [];
-        
-        \Log::info('RecommendationParser: Starting', [
-            'total_audits' => count($audits)
-        ]);
-        
         $recommendations = [];
 
         foreach (self::IMPORTANT_AUDITS as $category => $auditKeys) {
@@ -84,7 +79,6 @@ class RecommendationParser
                 $audit = $audits[$auditKey];
                 $score = $audit['score'] ?? null;
 
-                // Показываем ВСЕ проблемные аудиты (score < 0.9 = < 90%)
                 if ($score !== null && $score >= 0.9) {
                     continue;
                 }
@@ -112,10 +106,6 @@ class RecommendationParser
         usort($recommendations, function ($a, $b) {
             return ($a['score'] ?? 1) <=> ($b['score'] ?? 1);
         });
-
-        \Log::info('RecommendationParser: Finished', [
-            'recommendations_count' => count($recommendations)
-        ]);
 
         return $recommendations;
     }
@@ -147,31 +137,6 @@ class RecommendationParser
         }
 
         return $audit['displayValue'] ?? null;
-    }
-
-    private function hasUsefulData(array $audit, ?array $details): bool
-    {
-        if (isset($audit['displayValue']) && $audit['displayValue']) {
-            return true;
-        }
-
-        if (isset($audit['numericValue']) && $audit['numericValue'] > 0) {
-            return true;
-        }
-
-        if ($details && isset($details['items']) && !empty($details['items'])) {
-            foreach ($details['items'] as $item) {
-                if (isset($item['wastedBytes']) || isset($item['wastedMs']) || isset($item['totalBytes'])) {
-                    return true;
-                }
-            }
-        }
-
-        if ($details && (isset($details['overallSavingsMs']) || isset($details['overallSavingsBytes']))) {
-            return true;
-        }
-
-        return false;
     }
 
     private function extractImportantDetails(array $details): ?array

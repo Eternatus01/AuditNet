@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Api\V1;
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\BaseApiController;
 use App\Http\Requests\SecurityAuditRequest;
 use App\Services\Security\SecurityAuditService;
@@ -24,12 +22,7 @@ class SecurityController extends BaseApiController
                 $url = 'https://' . $url;
             }
 
-            Log::info('Starting security audit', ['url' => $url]);
-
-            // Выполняем анализ синхронно
             $result = $this->securityAuditService->auditWebsite($url);
-
-            Log::info('Security audit completed', ['url' => $url]);
 
             return $this->successResponse([
                 'checked_url' => $result->checkedUrl,
@@ -43,11 +36,6 @@ class SecurityController extends BaseApiController
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Security audit error', [
-                'url' => $url ?? 'unknown',
-                'error' => $e->getMessage()
-            ]);
-
             return $this->errorResponse('Ошибка при проверке безопасности: ' . $e->getMessage(), 500);
         }
     }

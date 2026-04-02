@@ -94,28 +94,18 @@ const {
   isLighthouseLoading,
   isSecurityLoading,
   error,
-  
-  // Scores
   performanceScore,
   accessibilityScore,
   bestPracticesScore,
   seoScore,
-  
-  // Display scores (computed из store)
   performanceScoreDisplay,
   accessibilityScoreDisplay,
   bestPracticesScoreDisplay,
   seoScoreDisplay,
-  
-  // Core Web Vitals
   lcp,
   fid,
   cls,
-  
-  // Security
   securityAudit,
-  
-  // Recommendations
   recommendations,
 } = storeToRefs(auditStore);
 
@@ -155,37 +145,28 @@ const clearPolling = () => {
 
 const startPolling = (auditId: number) => {
   clearPolling();
-  
-  logger.log('🔄 Начинаем polling для audit_id:', auditId);
-  
+
   pollInterval.value = setInterval(async () => {
     pollingAttempts.value++;
-    
+
     if (pollingAttempts.value >= MAX_POLLING_ATTEMPTS) {
       clearPolling();
       auditStore.setError('Превышено время ожидания анализа. Попробуйте позже.');
-      logger.error('❌ Polling timeout: превышено максимальное количество попыток');
       return;
     }
-    
+
     try {
       const response = await auditStore.checkAuditStatus(auditId);
-      
-      if (!response || !response.data) {
-        logger.warn('⚠️ Не удалось получить статус');
-        return;
-      }
-      
+
+      if (!response || !response.data) return;
+
       const auditData = response.data;
-      logger.log(`📊 Попытка ${pollingAttempts.value}/${MAX_POLLING_ATTEMPTS} - Статус: ${auditData.status}`);
-      
+
       if (auditData.status === 'completed') {
         clearPolling();
-        logger.log('✅ Анализ завершен! Обновляем данные...', auditData);
         auditStore.updateFromPolling(auditData);
       } else if (auditData.status === 'failed') {
         clearPolling();
-        logger.error('❌ Анализ провалился:', auditData.error_message);
         auditStore.setError(auditData.error_message || 'Ошибка анализа');
       }
     } catch (err) {
@@ -197,12 +178,11 @@ const startPolling = (auditId: number) => {
 onMounted(() => {
   const urlParam = route.query.url as string;
   const autoStart = route.query.autoStart as string;
-  
+
   if (urlParam) {
     websiteUrl.value = urlParam;
-    
+
     if (autoStart === 'true') {
-      logger.log('🚀 Автоматический запуск проверки для URL:', urlParam);
       setTimeout(() => {
         analyzeWebsite();
       }, 500);
@@ -212,7 +192,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   clearPolling();
-  logger.log('🧹 Cleanup: polling остановлен');
 });
 
 const isAuditReady = computed(() => {

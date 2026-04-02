@@ -1,5 +1,5 @@
 import { apiClient, getCsrfCookie } from "@/shared/utils/apiClient";
-import { handleApiError, isApiError } from "@/shared/utils/errorHandling";
+import { handleApiError, isApiError, extractApiErrorMessage } from "@/shared/utils/errorHandling";
 import type {
   AuthResponse,
   LogoutResponse,
@@ -35,14 +35,8 @@ export const useAuthApi = () => {
 
       return response.data;
     } catch (error: unknown) {
-      if (isApiError(error) && error.response?.status === 401) {
-        throw new Error(error.response?.data?.message || "Неверный email или пароль");
-      }
-
-      handleApiError(error, "Ошибка авторизации");
-      // TypeScript не знает, что handleApiError выбрасывает ошибку,
-      // поэтому добавляем этот недостижимый код для типов
-      throw new Error("Ошибка авторизации");
+      const message = extractApiErrorMessage(error, "Ошибка авторизации. Проверьте подключение к интернету");
+      throw new Error(message);
     }
   };
 

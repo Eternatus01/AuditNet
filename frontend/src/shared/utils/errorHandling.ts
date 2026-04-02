@@ -21,6 +21,23 @@ export function isApiError(error: unknown): error is ApiError {
   );
 }
 
+export function extractApiErrorMessage(error: unknown, defaultMessage: string): string {
+  if (!isApiError(error)) return defaultMessage;
+
+  const response = (error as ApiError).response;
+  if (!response) return defaultMessage;
+
+  if (response.status === 422) {
+    if (response.data?.errors) {
+      const messages = Object.values(response.data.errors).flat();
+      return messages.join(" ");
+    }
+    return response.data?.message || "Ошибка валидации данных";
+  }
+
+  return response.data?.message || response.data?.error || defaultMessage;
+}
+
 export function handleApiError(error: unknown, defaultMessage: string): never {
   if (!isApiError(error)) {
     throw new Error(defaultMessage);

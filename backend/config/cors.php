@@ -21,6 +21,9 @@ return [
 
     'allowed_origins' => [
         env('FRONTEND_URL', 'http://localhost:5173'),
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:3000',
         'https://auditnet.onrender.com',
         'http://91.142.74.132',
         'http://91.142.74.132:5173',
