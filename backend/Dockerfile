@@ -28,7 +28,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . .
 
 # Install dependencies and setup permissions
-RUN composer install --optimize-autoloader --no-dev --no-interaction && \
+RUN composer install --optimize-autoloader --no-dev --no-interaction --ignore-platform-reqs && \
     mkdir -p storage/framework/{sessions,views,cache} && \
     mkdir -p storage/logs && \
     mkdir -p bootstrap/cache && \
