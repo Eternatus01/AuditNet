@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useAuthApi } from "../composables/useAuthApi";
 import { tokenStorage } from "@/shared/utils/tokenStorage";
-import type { User, SignUpCredentials, SignInCredentials, AuthResponse } from "../types";
+import type { User, SignUpCredentials, SignInCredentials, AuthResponse, UpdateProfileCredentials } from "../types";
 
 export const useAuthStore = defineStore("auth", () => {
   const authApi = useAuthApi();
@@ -91,6 +91,24 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
+  const updateProfile = async (data: UpdateProfileCredentials): Promise<boolean> => {
+    try {
+      error.value = null;
+      const updatedUser = await authApi.updateProfile(data);
+      if (updatedUser) {
+        user.value = updatedUser;
+      }
+      return true;
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        error.value = e.message;
+      } else {
+        error.value = "Ошибка обновления профиля";
+      }
+      return false;
+    }
+  };
+
   const clearError = (): void => {
     error.value = null;
   };
@@ -104,6 +122,7 @@ export const useAuthStore = defineStore("auth", () => {
     signIn,
     logout,
     fetchProfile,
+    updateProfile,
     clearError,
   };
 });

@@ -9,17 +9,8 @@ use Illuminate\Cache\RateLimiting\Limit;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
-        //
-    }
+    public function register(): void {}
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         RateLimiter::for('api', function (Request $request) {
@@ -33,6 +24,15 @@ class AppServiceProvider extends ServiceProvider
                 return response()->json([
                     'message' => 'Слишком много попыток входа. Попробуйте через минуту.',
                     'retry_after' => 60
+                ], 429);
+            });
+        });
+
+        RateLimiter::for('guest', function (Request $request) {
+            return Limit::perMinutes(10, 5)->by($request->ip())->response(function () {
+                return response()->json([
+                    'message' => 'Слишком много запросов. Зарегистрируйтесь для снятия ограничений или попробуйте через 10 минут.',
+                    'retry_after' => 600
                 ], 429);
             });
         });

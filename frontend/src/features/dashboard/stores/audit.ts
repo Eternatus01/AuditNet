@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useAuditApi } from "../composables/useAuditApi";
-import type { SecurityAudit, ScoreDisplay, AuditResource, AnalyzeWebsiteResponse, AuditRecommendation } from "../types";
+import type { SecurityAudit, ScoreDisplay, AuditResource, AnalyzeWebsiteResponse, GuestAuditResponse, GuestAuditData, AuditRecommendation } from "../types";
 
 export const useAuditStore = defineStore("audit", () => {
   const auditApi = useAuditApi();
@@ -42,6 +42,55 @@ export const useAuditStore = defineStore("audit", () => {
     speedIndex.value = null;
   };
 
+  const analyzeGuestWebsite = async (websiteUrl: string): Promise<GuestAuditResponse | null> => {
+    if (!websiteUrl.trim()) {
+      error.value = "Введите URL сайта для анализа";
+      return null;
+    }
+
+    isLighthouseLoading.value = true;
+    error.value = null;
+    resetMetrics();
+
+    try {
+      const response = await auditApi.analyzeGuestWebsite(websiteUrl);
+
+      if (response?.success && response?.data) {
+        const auditData: GuestAuditData = response.data;
+
+        performanceScore.value = auditData.performance ?? null;
+        accessibilityScore.value = auditData.accessibility ?? null;
+        bestPracticesScore.value = auditData.best_practices ?? null;
+        seoScore.value = auditData.seo ?? null;
+
+        lcp.value = auditData.lcp ?? null;
+        fid.value = auditData.fid ?? null;
+        cls.value = auditData.cls ?? null;
+        fcp.value = auditData.fcp ?? null;
+        tbt.value = auditData.tbt ?? null;
+        speedIndex.value = auditData.speed_index ?? null;
+        recommendations.value = auditData.recommendations || [];
+
+        if (auditData.security_audit) {
+          securityAudit.value = auditData.security_audit;
+        }
+
+        isLighthouseLoading.value = false;
+        isSecurityLoading.value = false;
+        return response;
+      } else {
+        error.value = "Не удалось запустить анализ";
+        isLighthouseLoading.value = false;
+        return null;
+      }
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : "Ошибка при анализе сайта";
+      resetMetrics();
+      isLighthouseLoading.value = false;
+      return null;
+    }
+  };
+
   const analyzeWebsite = async (websiteUrl: string): Promise<AnalyzeWebsiteResponse | null> => {
     if (!websiteUrl.trim()) {
       error.value = "Введите URL сайта для анализа";
@@ -57,7 +106,7 @@ export const useAuditStore = defineStore("audit", () => {
       const response = await auditApi.analyzeWebsite(websiteUrl);
 
       if (response?.success && response?.data) {
-        const auditData = response.data;
+        const auditData = response.data as AuditResource;
         
         performanceScore.value = auditData.performance ?? null;
         accessibilityScore.value = auditData.accessibility ?? null;
@@ -159,6 +208,7 @@ export const useAuditStore = defineStore("audit", () => {
 
   return {
     analyzeWebsite,
+    analyzeGuestWebsite,
     fetchSecurityAudit,
     checkAuditStatus,
     updateFromPolling,

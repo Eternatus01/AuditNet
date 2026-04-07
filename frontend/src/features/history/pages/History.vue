@@ -7,7 +7,7 @@
       </p>
     </div>
 
-    <LoadingState v-if="isLoading" text="Загрузка истории..." />
+    <LoadingState v-if="isLoading" text="Загрузка истории..." size="lg" />
 
     <div v-else-if="error" class="error-message">
       {{ error }}

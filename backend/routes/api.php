@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\AuditController;
 use App\Http\Controllers\Api\V1\SecurityController;
+use App\Http\Controllers\Api\V1\GuestAuditController;
 use App\Http\Resources\UserResource;
 
 
@@ -34,6 +35,12 @@ Route::prefix('auth')->middleware('throttle:auth')->group(function () {
 
 Route::prefix('auth')->middleware(['throttle:api', 'auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::put('/profile', [AuthController::class, 'updateProfile']);
+});
+
+Route::prefix('audit')->middleware(['throttle:guest'])->group(function () {
+    Route::post('/analyze-guest', [GuestAuditController::class, 'analyze'])->middleware('prevent.ssrf');
+    Route::post('/security-audit-guest', [GuestAuditController::class, 'securityAnalyze'])->middleware('prevent.ssrf');
 });
 
 Route::prefix('audit')->middleware(['throttle:api', 'auth:sanctum'])->group(function () {

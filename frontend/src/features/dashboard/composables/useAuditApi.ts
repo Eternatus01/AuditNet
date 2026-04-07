@@ -1,22 +1,23 @@
 import { apiClient } from "@/shared/utils/apiClient";
-import { handleApiError, isApiError } from "@/shared/utils/errorHandling";
-import type { AnalyzeWebsiteResponse, SecurityAuditResponse, AuditStatusResponse } from "../types";
+import { handleApiError } from "@/shared/utils/errorHandling";
+import type { AnalyzeWebsiteResponse, GuestAuditResponse, GuestAuditData, AuditResource, SecurityAuditResponse, AuditStatusResponse } from "../types";
+
+interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T;
+}
 
 export const useAuditApi = () => {
   const analyzeWebsite = async (websiteUrl: string): Promise<AnalyzeWebsiteResponse> => {
     try {
-      const response = await apiClient<{ data: any }>("/audit/analyze", {
+      const response = await apiClient<ApiResponse<AuditResource>>("/audit/analyze", {
         method: "POST",
-        data: {
-          url: websiteUrl.trim(),
-        },
+        data: { url: websiteUrl.trim() },
       });
 
       if (response?.success && response?.data) {
-        return {
-          success: true,
-          data: response.data
-        };
+        return { success: true, data: response.data };
       }
 
       throw new Error("Не удалось получить результаты анализа");
@@ -27,11 +28,43 @@ export const useAuditApi = () => {
 
   const fetchSecurityAudit = async (websiteUrl: string): Promise<SecurityAuditResponse> => {
     try {
-      const response = await apiClient<{ data: SecurityAuditResponse }>("/audit/security-audit", {
+      const response = await apiClient<ApiResponse<SecurityAuditResponse>>("/audit/security-audit", {
         method: "POST",
-        data: {
-          url: websiteUrl.trim(),
-        },
+        data: { url: websiteUrl.trim() },
+      });
+
+      if (response?.success && response?.data) {
+        return response.data;
+      }
+
+      throw new Error("Не удалось получить результаты security audit");
+    } catch (error: unknown) {
+      return handleApiError(error, "Ошибка аудита безопасности");
+    }
+  };
+
+  const analyzeGuestWebsite = async (websiteUrl: string): Promise<GuestAuditResponse> => {
+    try {
+      const response = await apiClient<ApiResponse<GuestAuditData>>("/audit/analyze-guest", {
+        method: "POST",
+        data: { url: websiteUrl.trim() },
+      });
+
+      if (response?.success && response?.data) {
+        return { success: true, data: response.data };
+      }
+
+      throw new Error("Не удалось получить результаты анализа");
+    } catch (error: unknown) {
+      return handleApiError(error, "Ошибка при анализе сайта");
+    }
+  };
+
+  const fetchGuestSecurityAudit = async (websiteUrl: string): Promise<SecurityAuditResponse> => {
+    try {
+      const response = await apiClient<ApiResponse<SecurityAuditResponse>>("/audit/security-audit-guest", {
+        method: "POST",
+        data: { url: websiteUrl.trim() },
       });
 
       if (response?.success && response?.data) {
@@ -58,6 +91,8 @@ export const useAuditApi = () => {
   return {
     analyzeWebsite,
     fetchSecurityAudit,
+    analyzeGuestWebsite,
+    fetchGuestSecurityAudit,
     checkAuditStatus,
   };
 };

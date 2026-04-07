@@ -163,14 +163,15 @@ const emit = defineEmits<{
 
 @media (max-width: 768px) {
   .sidebar {
-    width: 100%;
-    max-width: 280px;
+    width: 280px;
     transform: translateX(0);
+    z-index: 200;
   }
 
   .sidebar.is-collapsed {
     transform: translateX(-100%);
   }
+
 }
 </style>
 

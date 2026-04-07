@@ -17,12 +17,13 @@ class LighthouseResultParser
             accessibility: $this->getCategoryScore($categories, 'accessibility'),
             bestPractices: $this->getCategoryScore($categories, 'best-practices'),
             seo: $this->getCategoryScore($categories, 'seo'),
-            lcp: $this->getAuditValue($audits, 'largest-contentful-paint'),
-            fid: $this->getAuditValue($audits, 'first-input-delay'),
-            cls: $this->getAuditValue($audits, 'cumulative-layout-shift'),
-            fcp: $this->getAuditValue($audits, 'first-contentful-paint'),
-            tbt: $this->getAuditValue($audits, 'total-blocking-time'),
-            speedIndex: $this->getAuditValue($audits, 'speed-index'),
+            lcp: $this->getAuditValueMs($audits, 'largest-contentful-paint', divideBy1000: true),
+            fid: $this->getAuditValueMs($audits, 'interaction-to-next-paint') 
+                ?? $this->getAuditValueMs($audits, 'total-blocking-time'),
+            cls: $this->getAuditValueCLS($audits, 'cumulative-layout-shift'),
+            fcp: $this->getAuditValueMs($audits, 'first-contentful-paint', divideBy1000: true),
+            tbt: $this->getAuditValueMs($audits, 'total-blocking-time'),
+            speedIndex: $this->getAuditValueMs($audits, 'speed-index', divideBy1000: true),
             timestamp: now()->toIso8601String(),
         );
     }
@@ -36,23 +37,28 @@ class LighthouseResultParser
         return (int) ($categories[$categoryName]['score'] * 100);
     }
 
-    private function getAuditValue(array $audits, string $auditId): ?float
+    private function getAuditValueMs(array $audits, string $auditId, bool $divideBy1000 = false): ?float
     {
         if (!isset($audits[$auditId]['numericValue'])) {
             return null;
         }
 
-        $value = $audits[$auditId]['numericValue'];
+        $value = (float) $audits[$auditId]['numericValue'];
 
-        if (in_array($auditId, ['first-contentful-paint', 'largest-contentful-paint', 'speed-index', 'total-blocking-time'])) {
+        if ($divideBy1000) {
             return round($value / 1000, 2);
         }
 
-        if ($auditId === 'cumulative-layout-shift') {
-            return round($value, 3);
+        return round($value, 2);
+    }
+
+    private function getAuditValueCLS(array $audits, string $auditId): ?float
+    {
+        if (!isset($audits[$auditId]['numericValue'])) {
+            return null;
         }
 
-        return $value;
+        return round((float) $audits[$auditId]['numericValue'], 3);
     }
 }
 

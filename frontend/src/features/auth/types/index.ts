@@ -15,6 +15,14 @@ export interface SignInCredentials {
   password: string;
 }
 
+export interface UpdateProfileCredentials {
+  name?: string;
+  email?: string;
+  current_password?: string;
+  password?: string;
+  password_confirmation?: string;
+}
+
 export interface AuthResponse {
   user: User;
   token?: string;

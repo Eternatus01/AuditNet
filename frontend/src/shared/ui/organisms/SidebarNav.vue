@@ -1,45 +1,21 @@
 <template>
   <nav class="sidebar-nav">
-    <template v-if="!isAuthenticated">
-      <SidebarNavItem
-        to="/register"
-        label="Регистрация"
-        aria-label="Регистрация"
-        route-name="register"
-      >
-        <template #icon>
-          <IconLucideUserPlus />
-        </template>
-      </SidebarNavItem>
-
-      <SidebarNavItem
-        to="/login"
-        label="Войти"
-        aria-label="Войти"
-        route-name="login"
-      >
-        <template #icon>
-          <IconLucideLogIn />
-        </template>
-      </SidebarNavItem>
-    </template>
+    <SidebarNavItem
+      to="/dashboard"
+      label="Аудит"
+      aria-label="Аудит сайта"
+      route-name="dashboard"
+    >
+      <template #icon>
+        <IconLucideBarChart3 />
+      </template>
+    </SidebarNavItem>
 
     <template v-if="isAuthenticated">
       <SidebarNavItem
-        to="/dashboard"
-        label="Главная"
-        aria-label="Главная"
-        route-name="dashboard"
-      >
-        <template #icon>
-          <IconLucideBarChart3 />
-        </template>
-      </SidebarNavItem>
-
-      <SidebarNavItem
         to="/history"
         label="История"
-        aria-label="История"
+        aria-label="История аудитов"
         route-name="history"
       >
         <template #icon>
@@ -57,25 +33,23 @@
           <IconLucideTrendingUp />
         </template>
       </SidebarNavItem>
-
-      <SidebarNavItem
-        to="/profile"
-        label="Профиль"
-        aria-label="Профиль"
-        route-name="profile"
-      >
-        <template #icon>
-          <IconLucideUser />
-        </template>
-      </SidebarNavItem>
     </template>
+
+    <SidebarNavItem
+      to="/profile"
+      :label="isAuthenticated ? 'Профиль' : 'Войти'"
+      :aria-label="isAuthenticated ? 'Профиль' : 'Войти в аккаунт'"
+      route-name="profile"
+    >
+      <template #icon>
+        <IconLucideUser />
+      </template>
+    </SidebarNavItem>
   </nav>
 </template>
 
 <script setup lang="ts">
 import SidebarNavItem from "@/shared/ui/molecules/SidebarNavItem.vue";
-import IconLucideUserPlus from "~icons/lucide/user-plus";
-import IconLucideLogIn from "~icons/lucide/log-in";
 import IconLucideBarChart3 from "~icons/lucide/bar-chart-3";
 import IconLucideHistory from "~icons/lucide/history";
 import IconLucideTrendingUp from "~icons/lucide/trending-up";
@@ -98,9 +72,7 @@ defineProps<{
   min-width: 0;
 }
 
-/* В свернутом состоянии центрируем элементы */
 :deep(.sidebar.is-collapsed) .sidebar-nav {
   align-items: center;
 }
 </style>
-

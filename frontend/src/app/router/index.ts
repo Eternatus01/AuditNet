@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
+import { watch } from "vue";
 import { useAuthStore } from "@/features/auth/stores/auth";
 
-// Lazy loading для всех роутов
 const routes: RouteRecordRaw[] = [
   {
     path: "/",
@@ -9,22 +9,9 @@ const routes: RouteRecordRaw[] = [
     redirect: "/dashboard",
   },
   {
-    path: "/register",
-    name: "register",
-    component: () => import("@/features/auth/pages/Register.vue"),
-    meta: { guestOnly: true },
-  },
-  {
-    path: "/login",
-    name: "login",
-    component: () => import("@/features/auth/pages/Login.vue"),
-    meta: { guestOnly: true },
-  },
-  {
     path: "/dashboard",
     name: "dashboard",
     component: () => import("@/features/dashboard/pages/Dashboard.vue"),
-    meta: { requiresAuth: true },
   },
   {
     path: "/history",
@@ -48,7 +35,6 @@ const routes: RouteRecordRaw[] = [
     path: "/profile",
     name: "profile",
     component: () => import("@/features/profile/pages/Profile.vue"),
-    meta: { requiresAuth: true },
   },
   {
     path: "/:pathMatch(.*)*",
@@ -67,24 +53,21 @@ router.beforeEach(async (to, _from, next) => {
 
   if (authStore.isProfileLoading) {
     await new Promise<void>((resolve) => {
-      const maxWaitTime = 3000;
-      const startTime = Date.now();
-      
-      const checkInterval = setInterval(() => {
-        if (!authStore.isProfileLoading || Date.now() - startTime > maxWaitTime) {
-          clearInterval(checkInterval);
-          resolve();
+      const stop = watch(
+        () => authStore.isProfileLoading,
+        (loading) => {
+          if (!loading) {
+            stop();
+            resolve();
+          }
         }
-      }, 50);
+      );
+      setTimeout(() => { stop(); resolve(); }, 3000);
     });
   }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return next({ name: "login", query: { redirect: to.fullPath } });
-  }
-
-  if (to.meta.guestOnly && authStore.isAuthenticated) {
-    return next({ name: "dashboard" });
+    return next({ name: "profile", query: { redirect: to.fullPath } });
   }
 
   return next();

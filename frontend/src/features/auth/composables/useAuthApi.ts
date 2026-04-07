@@ -6,6 +6,7 @@ import type {
   ProfileResponse,
   SignUpCredentials,
   SignInCredentials,
+  UpdateProfileCredentials,
 } from "../types";
 
 export const useAuthApi = () => {
@@ -87,10 +88,24 @@ export const useAuthApi = () => {
     }
   };
 
+  const updateProfile = async (data: UpdateProfileCredentials): Promise<ProfileResponse> => {
+    try {
+      const response = await apiClient<{ data: { user: ProfileResponse } }>("/auth/profile", {
+        method: "PUT",
+        data,
+      });
+      return response.data.user;
+    } catch (error: unknown) {
+      const message = extractApiErrorMessage(error, "Ошибка обновления профиля");
+      throw new Error(message);
+    }
+  };
+
   return {
     signUp,
     signIn,
     logout,
     fetchProfile,
+    updateProfile,
   };
 };

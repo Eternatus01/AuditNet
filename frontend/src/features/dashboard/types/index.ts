@@ -95,10 +95,32 @@ export interface SecurityAudit {
   scripts_info: string[];
 }
 
+export interface GuestAuditResponse {
+  success: boolean;
+  message?: string;
+  data: GuestAuditData;
+}
+
+export interface GuestAuditData {
+  url: string;
+  performance: number | null;
+  accessibility: number | null;
+  best_practices: number | null;
+  seo: number | null;
+  lcp: number | null;
+  fid: number | null;
+  cls: number | null;
+  fcp: number | null;
+  tbt: number | null;
+  speed_index: number | null;
+  security_audit: SecurityAudit | null;
+  recommendations: AuditRecommendation[];
+}
+
 export interface AnalyzeWebsiteResponse {
   success: boolean;
   message?: string;
-  data: AuditJobResponse | LighthouseData;
+  data: AuditJobResponse | LighthouseData | GuestAuditData | AuditResource;
 }
 
 export interface SecurityAuditResponse extends SecurityAudit {

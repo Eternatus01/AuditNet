@@ -7,10 +7,7 @@
       </p>
     </div>
 
-    <div v-if="isLoadingUrls" class="loading-state">
-      <div class="loading-spinner"></div>
-      <p>Загрузка списка сайтов...</p>
-    </div>
+    <LoadingState v-if="isLoadingUrls" text="Загрузка списка сайтов..." size="lg" />
 
     <div v-else-if="availableUrls.length === 0" class="empty-state">
       <div class="empty-icon">🔍</div>
@@ -24,10 +21,7 @@
       @select="handleSiteSelect"
     />
 
-    <div v-if="selectedUrl && isLoading" class="loading-state">
-      <div class="loading-spinner"></div>
-      <p>Загрузка данных аналитики...</p>
-    </div>
+    <LoadingState v-if="selectedUrl && isLoading" text="Загрузка данных аналитики..." size="lg" />
 
     <div v-else-if="selectedUrl && error" class="error-state">
       <p>{{ error }}</p>
@@ -75,6 +69,7 @@ import AnalyticsSitesList from '../components/AnalyticsSitesList.vue';
 import AnalyticsHeader from '../components/AnalyticsHeader.vue';
 import AnalyticsStats from '../components/AnalyticsStats.vue';
 import MetricChart from '../components/MetricChart.vue';
+import LoadingState from '@/shared/ui/molecules/LoadingState.vue';
 import { logger } from '@/shared/utils/logger';
 
 const analyticsApi = useAnalyticsApi();
@@ -254,10 +249,7 @@ onMounted(() => {
   font-size: 2.75rem;
   font-weight: 700;
   margin: 0 0 1rem 0;
-  background: linear-gradient(135deg, #646cff 0%, #9c27b0 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #fff;
   letter-spacing: -0.5px;
 }
 
@@ -268,7 +260,6 @@ onMounted(() => {
   font-weight: 400;
 }
 
-.loading-state,
 .error-state,
 .empty-state {
   display: flex;
@@ -277,22 +268,6 @@ onMounted(() => {
   justify-content: center;
   padding: 4rem 2rem;
   text-align: center;
-}
-
-.loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(100, 108, 255, 0.2);
-  border-top-color: #646cff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .error-state p {

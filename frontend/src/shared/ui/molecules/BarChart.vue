@@ -48,9 +48,9 @@ const getColorByScore = (score: number) => {
 
 const chartData = computed<ChartData<'bar'>>(() => {
   const scores = [
-    { label: 'Performance', value: getNumericValue(props.performanceScore) },
-    { label: 'Accessibility', value: getNumericValue(props.accessibilityScore) },
-    { label: 'Best Practices', value: getNumericValue(props.bestPracticesScore) },
+    { label: 'Производительность', value: getNumericValue(props.performanceScore) },
+    { label: 'Доступность', value: getNumericValue(props.accessibilityScore) },
+    { label: 'Стандарты качества', value: getNumericValue(props.bestPracticesScore) },
     { label: 'SEO', value: getNumericValue(props.seoScore) },
   ];
 
@@ -63,10 +63,10 @@ const chartData = computed<ChartData<'bar'>>(() => {
         backgroundColor: scores.map(s => getColorByScore(s.value).bg),
         borderColor: scores.map(s => getColorByScore(s.value).border),
         borderWidth: 2,
-        borderRadius: 12,
-        barThickness: props.orientation === 'vertical' ? 80 : 60,
-        barPercentage: 0.9,
-        categoryPercentage: 0.8,
+        borderRadius: 8,
+        maxBarThickness: props.orientation === 'vertical' ? 80 : 50,
+        barPercentage: 0.75,
+        categoryPercentage: 0.85,
       },
     ],
   };

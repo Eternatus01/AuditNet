@@ -12,8 +12,8 @@
     <div class="scores-grid-modern">
       <div class="featured-card">
         <div class="featured-header">
-          <h3>Overall Performance</h3>
-          <p class="featured-subtitle">Сводная оценка производительности</p>
+          <h3>Общая производительность</h3>
+          <p class="featured-subtitle">Сводная оценка по всем категориям</p>
         </div>
         <BarChart
           :performance-score="performanceScore"
@@ -25,7 +25,7 @@
       </div>
 
       <ScoreCard
-        title="Performance"
+        title="Производительность"
         :score="performanceScore"
         icon-class="performance"
         :description="descriptions.scores.performance"
@@ -38,7 +38,7 @@
       </ScoreCard>
 
       <ScoreCard
-        title="Accessibility"
+        title="Доступность"
         :score="accessibilityScore"
         icon-class="accessibility"
         :description="descriptions.scores.accessibility"
@@ -51,7 +51,7 @@
       </ScoreCard>
 
       <ScoreCard
-        title="Best Practices"
+        title="Стандарты качества"
         :score="bestPracticesScore"
         icon-class="best-practices"
         :description="descriptions.scores.bestPractices"
@@ -214,16 +214,33 @@ const onToggle = (_key: string) => {
 @media (max-width: 768px) {
   .scores-grid-modern {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
   
   .featured-card {
     grid-column: span 1;
-    min-height: 300px;
+    grid-row: span 1;
+    min-height: 260px;
+    padding: 1.5rem;
+  }
+
+  .featured-header {
+    margin-bottom: 1rem;
+  }
+
+  .featured-header h3 {
+    font-size: 1.25rem;
   }
   
   .info-notice {
     padding: 1rem 1.25rem;
     font-size: 0.875rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .notice-icon {
+    display: none;
   }
 }
 </style>

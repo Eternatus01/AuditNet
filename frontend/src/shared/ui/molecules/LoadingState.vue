@@ -18,12 +18,12 @@ const props = withDefaults(
   }>(),
   {
     text: 'Загрузка...',
-    size: 'md',
+    size: 'lg',
   }
 );
 
 const spinnerSize = computed(() => {
-  const sizeMap = { sm: 24, md: 32, lg: 48 };
+  const sizeMap = { sm: 24, md: 36, lg: 56 };
   return sizeMap[props.size];
 });
 </script>
@@ -35,13 +35,14 @@ const spinnerSize = computed(() => {
   align-items: center;
   justify-content: center;
   padding: 3rem 1rem;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .loading-text {
   font-size: 1rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.65);
   margin: 0;
+  text-align: center;
 }
 </style>
 

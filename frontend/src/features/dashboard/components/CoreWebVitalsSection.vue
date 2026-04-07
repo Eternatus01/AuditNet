@@ -36,11 +36,11 @@
       </MetricCard>
 
       <MetricCard
-        title="FID"
-        full-name="First Input Delay"
+        title="INP"
+        full-name="Interaction to Next Paint"
         :formatted-value="formatFID(fid)"
         :status="getMetricStatus('fid', fid)"
-        threshold="Цель: < 100ms"
+        threshold="Цель: < 200ms"
         :description="descriptions.coreWebVitals.fid"
         :is-expanded="isExpanded('fid')"
         @toggle-info="onToggle('fid')"

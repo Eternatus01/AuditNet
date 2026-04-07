@@ -1,6 +1,6 @@
 <template>
   <div class="hd-page">
-    <LoadingState v-if="isLoading" text="Загрузка аудита..." />
+    <LoadingState v-if="isLoading" text="Загрузка аудита..." size="lg" />
 
     <div v-else-if="error" class="hd-error">
       {{ error }}

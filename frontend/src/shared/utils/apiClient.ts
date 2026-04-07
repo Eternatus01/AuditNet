@@ -35,12 +35,12 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       tokenStorage.remove();
       
-      const publicRoutes = ['/login', '/register', '/'];
+      const publicRoutes = ['/profile', '/dashboard', '/'];
       const currentPath = window.location.pathname;
       
       if (!publicRoutes.includes(currentPath)) {
         localStorage.setItem('auth_expired_message', 'Ваша сессия истекла. Пожалуйста, войдите снова.');
-        window.location.href = '/login';
+        window.location.href = '/profile';
       }
     }
     

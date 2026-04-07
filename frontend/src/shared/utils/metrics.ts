@@ -13,8 +13,10 @@ export const getMetricStatus = (
       return "poor";
 
     case "fid":
-      if (value < 100) return "good";
-      if (value <= 300) return "needs-improvement";
+      // INP: good < 200ms, needs-improvement <= 500ms
+      // TBT (fallback): good < 200ms, needs-improvement <= 600ms
+      if (value < 200) return "good";
+      if (value <= 500) return "needs-improvement";
       return "poor";
 
     case "cls":

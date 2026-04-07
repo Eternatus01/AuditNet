@@ -132,7 +132,29 @@ watch(debouncedValue, (newValue) => {
 
 <style scoped>
 .url-input-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
   transition: all 0.3s ease;
+}
+
+.url-input {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.analyze-btn {
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .analyze-btn {
+    flex: 1 1 100%;
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
+  }
 }
 
 .url-input-wrapper.has-error {

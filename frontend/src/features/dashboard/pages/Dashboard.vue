@@ -16,16 +16,12 @@
       @analyze="analyzeWebsite"
     />
 
-    <div v-if="isLoading && !isAuditReady" class="loading-indicator">
-      <div class="loading-spinner"></div>
-      <h3>Анализ выполняется...</h3>
-      <p>Это может занять 30-60 секунд. Пожалуйста, подождите.</p>
-      <div class="loading-dots">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-    </div>
+    <LoadingState
+      v-if="isLoading && !isAuditReady"
+      text="Анализ выполняется... Это может занять 30–60 секунд"
+      size="lg"
+    />
+
 
     <div class="dashboard-results" :class="{ hidden: !isAuditReady }">
       <ScoresSection
@@ -65,14 +61,28 @@
     <div v-if="error" class="error-message">
       {{ error }}
     </div>
+
+    <div v-if="!isAuthenticated && isAuditReady" class="guest-banner">
+      <div class="guest-banner-content">
+        <span class="guest-banner-icon">💾</span>
+        <div>
+          <strong>Результаты не сохранены</strong>
+          <p>Зарегистрируйтесь, чтобы сохранять историю аудитов и получить доступ к аналитике.</p>
+        </div>
+        <button class="guest-banner-btn" @click="router.push({ name: 'profile' })">
+          Войти / Зарегистрироваться
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, onBeforeUnmount, onMounted } from "vue";
 import { storeToRefs } from "pinia";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useAuditStore } from "../stores/audit";
+import { useAuthStore } from "@/features/auth/stores/auth";
 import { useAuditDescriptions } from "../composables/useAuditDescriptions";
 import { useToggle } from "@/shared/composables/useToggle";
 import { logger } from "@/shared/utils/logger";
@@ -81,14 +91,18 @@ import ScoresSection from "../components/ScoresSection.vue";
 import CoreWebVitalsSection from "../components/CoreWebVitalsSection.vue";
 import SecuritySection from "../components/SecuritySection.vue";
 import RecommendationsSection from "../components/RecommendationsSection.vue";
+import LoadingState from "@/shared/ui/molecules/LoadingState.vue";
 
 const POLLING_INTERVAL_MS = 10000;
 const MAX_POLLING_ATTEMPTS = 30;
 
 const route = useRoute();
+const router = useRouter();
 const auditStore = useAuditStore();
+const authStore = useAuthStore();
 const descriptions = useAuditDescriptions();
 const { expandedItems: expandedInfo, toggle: toggleInfo } = useToggle();
+const { isAuthenticated } = storeToRefs(authStore);
 
 const {
   isLighthouseLoading,
@@ -120,19 +134,20 @@ const isLoading = computed(() =>
 const securityError = computed(() => error.value);
 
 const analyzeWebsite = async () => {
-  const lighthousePromise = auditStore
-    .analyzeWebsite(websiteUrl.value)
-    .catch((err) => {
-      logger.error("Lighthouse error:", err);
-    });
+  if (isAuthenticated.value) {
+    const lighthousePromise = auditStore
+      .analyzeWebsite(websiteUrl.value)
+      .catch((err) => { logger.error("Lighthouse error:", err); });
 
-  const securityPromise = auditStore
-    .fetchSecurityAudit(websiteUrl.value)
-    .catch((err) => {
-      logger.error("Security audit error:", err);
-    });
+    const securityPromise = auditStore
+      .fetchSecurityAudit(websiteUrl.value)
+      .catch((err) => { logger.error("Security audit error:", err); });
 
-  await Promise.all([lighthousePromise, securityPromise]);
+    await Promise.all([lighthousePromise, securityPromise]);
+  } else {
+    await auditStore.analyzeGuestWebsite(websiteUrl.value)
+      .catch((err) => { logger.error("Guest audit error:", err); });
+  }
 };
 
 const clearPolling = () => {
@@ -209,88 +224,76 @@ const isSecurityReady = computed(() => {
 </script>
 
 <style scoped>
-.loading-indicator {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 2rem;
+
+.guest-banner {
   margin: 2rem 0;
-  background: linear-gradient(135deg, rgba(100, 108, 255, 0.1) 0%, rgba(255, 107, 107, 0.1) 100%);
-  border: 2px solid rgba(100, 108, 255, 0.3);
-  border-radius: 16px;
-  animation: fadeIn 0.3s ease-out;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.12), rgba(124, 58, 237, 0.05));
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  animation: fadeIn 0.4s ease-out;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.loading-spinner {
-  width: 60px;
-  height: 60px;
-  border: 4px solid rgba(100, 108, 255, 0.2);
-  border-top-color: #646cff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1.5rem;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-indicator h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #fff;
-  margin: 0 0 0.5rem 0;
-}
-
-.loading-indicator p {
-  font-size: 1rem;
-  color: rgba(255, 255, 255, 0.7);
-  margin: 0 0 1.5rem 0;
-}
-
-.loading-dots {
+.guest-banner-content {
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.loading-dots span {
-  width: 12px;
-  height: 12px;
-  background: #646cff;
-  border-radius: 50%;
-  animation: bounce 1.4s infinite ease-in-out both;
+.guest-banner-icon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
 }
 
-.loading-dots span:nth-child(1) {
-  animation-delay: -0.32s;
+.guest-banner-content > div {
+  flex: 1;
+  min-width: 200px;
 }
 
-.loading-dots span:nth-child(2) {
-  animation-delay: -0.16s;
+.guest-banner-content strong {
+  display: block;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 0.25rem;
 }
 
-@keyframes bounce {
-  0%, 80%, 100% {
-    transform: scale(0);
-    opacity: 0.5;
+.guest-banner-content p {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+.guest-banner-btn {
+  flex-shrink: 0;
+  padding: 0.6rem 1.25rem;
+  background: #7c3aed;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.guest-banner-btn:hover {
+  background: #6d28d9;
+}
+
+@media (max-width: 768px) {
+  .guest-banner-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
   }
-  40% {
-    transform: scale(1);
-    opacity: 1;
+
+  .guest-banner-btn {
+    width: 100%;
+    text-align: center;
+    white-space: normal;
   }
+
 }
 </style>
