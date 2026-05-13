@@ -1,6 +1,6 @@
 import { apiClient } from "@/shared/utils/apiClient";
 import { handleApiError } from "@/shared/utils/errorHandling";
-import type { Audit, PaginatedResponse, AuditDetailResponse } from "../types";
+import type { Audit, PaginatedResponse, AuditDetailResponse, ShareLinkResponse } from "../types";
 
 export const useHistoryApi = () => {
   const fetchHistory = async (page = 1): Promise<PaginatedResponse<Audit>> => {
@@ -25,9 +25,33 @@ export const useHistoryApi = () => {
     }
   };
 
+  const createAuditShareLink = async (id: number): Promise<ShareLinkResponse> => {
+    try {
+      return await apiClient<ShareLinkResponse>(`/audit/history/${id}/share`, {
+        method: "POST",
+      });
+    } catch (error: unknown) {
+      handleApiError(error, "Ошибка при создании публичной ссылки");
+      throw error;
+    }
+  };
+
+  const fetchPublicAudit = async (token: string): Promise<AuditDetailResponse> => {
+    try {
+      return await apiClient<AuditDetailResponse>(`/audit/public/${token}`, {
+        method: "GET",
+      });
+    } catch (error: unknown) {
+      handleApiError(error, "Ошибка при загрузке публичного отчёта");
+      throw error;
+    }
+  };
+
   return {
     fetchHistory,
     fetchAuditDetail,
+    createAuditShareLink,
+    fetchPublicAudit,
   };
 };
 

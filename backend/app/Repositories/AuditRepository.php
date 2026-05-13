@@ -6,6 +6,7 @@ use App\Models\Audit;
 use App\Models\User;
 use App\Enums\AuditStatus;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Str;
 
 class AuditRepository
 {
@@ -22,6 +23,13 @@ class AuditRepository
     public function findByIdForUserOrFail(int $id, User $user): Audit
     {
         return $user->audits()->with(['securityAudit', 'recommendations'])->findOrFail($id);
+    }
+
+    public function findByShareTokenOrFail(string $token): Audit
+    {
+        return Audit::with(['securityAudit', 'recommendations'])
+            ->where('share_token', $token)
+            ->firstOrFail();
     }
 
     public function getUserAuditsPaginated(User $user, int $perPage = 20): LengthAwarePaginator
@@ -87,6 +95,21 @@ class AuditRepository
             'status' => AuditStatus::FAILED,
             'error_message' => $errorMessage,
         ]);
+    }
+
+    public function ensureShareToken(Audit $audit): string
+    {
+        if ($audit->share_token) {
+            return $audit->share_token;
+        }
+
+        do {
+            $token = Str::random(48);
+        } while (Audit::where('share_token', $token)->exists());
+
+        $audit->update(['share_token' => $token]);
+
+        return $token;
     }
 
 }

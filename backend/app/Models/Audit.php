@@ -26,6 +26,7 @@ class Audit extends Model
         'speed_index',
         'audited_at',
         'error_message',
+        'share_token',
     ];
 
     protected $casts = [

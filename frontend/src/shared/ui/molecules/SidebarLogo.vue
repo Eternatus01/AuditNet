@@ -2,7 +2,7 @@
   <div class="sidebar-logo">
     <div class="logo-icon">
       <slot name="icon">
-        <IconLucideLayers />
+        <img src="/logo.png?v=4" alt="AuditNet" class="logo-image" />
       </slot>
     </div>
     <span v-if="!collapsed" class="logo-text">
@@ -12,8 +12,6 @@
 </template>
 
 <script setup lang="ts">
-import IconLucideLayers from "~icons/lucide/layers";
-
 withDefaults(
   defineProps<{
     text?: string;
@@ -44,20 +42,30 @@ withDefaults(
 }
 
 .logo-icon {
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  min-height: 28px;
+  width: 50px;
+  height: 50px;
+  min-width: 50px;
+  min-height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #646cff;
   flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 14px;
 }
 
 .logo-icon :deep(svg) {
   width: 100%;
   height: 100%;
+}
+
+.logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  transform: scale(2.15);
 }
 
 .logo-text {

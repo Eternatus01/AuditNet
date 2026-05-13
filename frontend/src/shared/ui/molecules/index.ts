@@ -5,4 +5,6 @@ export { default as LoadingState } from './LoadingState.vue';
 export { default as SidebarLogo } from './SidebarLogo.vue';
 export { default as SidebarNavItem } from './SidebarNavItem.vue';
 export { default as BarChart } from './BarChart.vue';
+export { default as DownloadReportButton } from './DownloadReportButton.vue';
+export { default as ShareReportButton } from './ShareReportButton.vue';
 

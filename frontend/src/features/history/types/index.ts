@@ -65,6 +65,14 @@ export interface AuditDetailResponse {
   data: Audit;
 }
 
+export interface ShareLinkResponse {
+  success: boolean;
+  message?: string;
+  data: {
+    token: string;
+  };
+}
+
 export type ScoreClass = 'good' | 'average' | 'poor' | 'unknown';
 
 export interface ApiError {

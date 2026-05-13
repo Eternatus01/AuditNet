@@ -11,6 +11,17 @@
       </template>
     </SidebarNavItem>
 
+    <SidebarNavItem
+      to="/comparison"
+      label="Сравнение"
+      aria-label="Сравнение сайтов"
+      route-name="comparison"
+    >
+      <template #icon>
+        <IconLucideSwords />
+      </template>
+    </SidebarNavItem>
+
     <template v-if="isAuthenticated">
       <SidebarNavItem
         to="/history"
@@ -51,6 +62,7 @@
 <script setup lang="ts">
 import SidebarNavItem from "@/shared/ui/molecules/SidebarNavItem.vue";
 import IconLucideBarChart3 from "~icons/lucide/bar-chart-3";
+import IconLucideSwords from "~icons/lucide/swords";
 import IconLucideHistory from "~icons/lucide/history";
 import IconLucideTrendingUp from "~icons/lucide/trending-up";
 import IconLucideUser from "~icons/lucide/user";

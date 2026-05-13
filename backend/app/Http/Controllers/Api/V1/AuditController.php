@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\BaseApiController;
 use App\Http\Requests\AuditRequest;
 use App\Http\Resources\AuditResource;
+use App\Http\Resources\PublicAuditResource;
 use App\Repositories\AuditRepository;
 use App\Services\Audit\AuditService;
 use App\Services\Audit\RecommendationParser;
@@ -136,6 +137,34 @@ class AuditController extends BaseApiController
     public function status(int $id): JsonResponse
     {
         return $this->show($id);
+    }
+
+    public function share(int $id): JsonResponse
+    {
+        try {
+            $user = $this->requireAuthenticatedUser();
+            $audit = $this->auditRepository->findByIdForUserOrFail($id, $user);
+            $token = $this->auditRepository->ensureShareToken($audit);
+
+            return $this->successResponse([
+                'token' => $token,
+            ], 'Публичная ссылка создана.');
+
+        } catch (\Exception $e) {
+            return $this->errorResponse('Аудит не найден.', 404);
+        }
+    }
+
+    public function publicShow(string $token): JsonResponse
+    {
+        try {
+            $audit = $this->auditRepository->findByShareTokenOrFail($token);
+
+            return $this->successResponse(new PublicAuditResource($audit));
+
+        } catch (\Exception $e) {
+            return $this->errorResponse('Публичный отчёт не найден.', 404);
+        }
     }
 }
 

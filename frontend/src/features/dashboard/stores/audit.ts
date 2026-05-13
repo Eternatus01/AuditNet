@@ -9,6 +9,7 @@ export const useAuditStore = defineStore("audit", () => {
   const isLighthouseLoading = ref<boolean>(false);
   const isSecurityLoading = ref<boolean>(false);
   const error = ref<string | null>(null);
+  const currentAuditId = ref<number | null>(null);
 
   const performanceScore = ref<number | null>(null);
   const accessibilityScore = ref<number | null>(null);
@@ -28,6 +29,7 @@ export const useAuditStore = defineStore("audit", () => {
 
   const resetMetrics = (): void => {
     error.value = null;
+    currentAuditId.value = null;
     performanceScore.value = null;
     accessibilityScore.value = null;
     bestPracticesScore.value = null;
@@ -107,6 +109,7 @@ export const useAuditStore = defineStore("audit", () => {
 
       if (response?.success && response?.data) {
         const auditData = response.data as AuditResource;
+        currentAuditId.value = auditData.id;
         
         performanceScore.value = auditData.performance ?? null;
         accessibilityScore.value = auditData.accessibility ?? null;
@@ -214,6 +217,7 @@ export const useAuditStore = defineStore("audit", () => {
     updateFromPolling,
     setError,
     securityAudit,
+    currentAuditId,
     performanceScore,
     accessibilityScore,
     bestPracticesScore,

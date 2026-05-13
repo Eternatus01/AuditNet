@@ -41,6 +41,7 @@ Route::prefix('auth')->middleware(['throttle:api', 'auth:sanctum'])->group(funct
 Route::prefix('audit')->middleware(['throttle:guest'])->group(function () {
     Route::post('/analyze-guest', [GuestAuditController::class, 'analyze'])->middleware('prevent.ssrf');
     Route::post('/security-audit-guest', [GuestAuditController::class, 'securityAnalyze'])->middleware('prevent.ssrf');
+    Route::get('/public/{token}', [AuditController::class, 'publicShow']);
 });
 
 Route::prefix('audit')->middleware(['throttle:api', 'auth:sanctum'])->group(function () {
@@ -48,6 +49,7 @@ Route::prefix('audit')->middleware(['throttle:api', 'auth:sanctum'])->group(func
     Route::post('/security-audit', [SecurityController::class, 'analyze'])->middleware('prevent.ssrf');
     Route::get('/history', [AuditController::class, 'history']);
     Route::get('/history/{id}', [AuditController::class, 'show']);
+    Route::post('/history/{id}/share', [AuditController::class, 'share']);
     Route::get('/status/{id}', [AuditController::class, 'status']);
 });
 

@@ -50,11 +50,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8000/api
     container_name: auditnet_frontend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/dist
     ports:
       - "5173:5173"
     environment:

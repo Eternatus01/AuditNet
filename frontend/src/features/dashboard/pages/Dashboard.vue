@@ -23,6 +23,14 @@
     />
 
 
+    <div v-if="isAuditReady" class="dashboard-report-actions">
+      <ShareReportButton
+        v-if="isAuthenticated && currentAuditId"
+        :get-share-url="getCurrentShareUrl"
+      />
+      <DownloadReportButton :data="reportData" />
+    </div>
+
     <div class="dashboard-results" :class="{ hidden: !isAuditReady }">
       <ScoresSection
         :performance-score="performanceScoreDisplay"
@@ -78,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onBeforeUnmount, onMounted } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useRoute, useRouter } from "vue-router";
 import { useAuditStore } from "../stores/audit";
@@ -92,14 +100,16 @@ import CoreWebVitalsSection from "../components/CoreWebVitalsSection.vue";
 import SecuritySection from "../components/SecuritySection.vue";
 import RecommendationsSection from "../components/RecommendationsSection.vue";
 import LoadingState from "@/shared/ui/molecules/LoadingState.vue";
-
-const POLLING_INTERVAL_MS = 10000;
-const MAX_POLLING_ATTEMPTS = 30;
+import DownloadReportButton from "@/shared/ui/molecules/DownloadReportButton.vue";
+import ShareReportButton from "@/shared/ui/molecules/ShareReportButton.vue";
+import { useHistoryApi } from "@/features/history/composables/useHistoryApi";
+import type { AuditReportData } from "../utils/pdf";
 
 const route = useRoute();
 const router = useRouter();
 const auditStore = useAuditStore();
 const authStore = useAuthStore();
+const historyApi = useHistoryApi();
 const descriptions = useAuditDescriptions();
 const { expandedItems: expandedInfo, toggle: toggleInfo } = useToggle();
 const { isAuthenticated } = storeToRefs(authStore);
@@ -119,13 +129,15 @@ const {
   lcp,
   fid,
   cls,
+  fcp,
+  tbt,
+  speedIndex,
   securityAudit,
   recommendations,
+  currentAuditId,
 } = storeToRefs(auditStore);
 
 const websiteUrl = ref("");
-const pollInterval = ref<ReturnType<typeof setInterval> | null>(null);
-const pollingAttempts = ref(0);
 
 const isLoading = computed(() => 
   isLighthouseLoading.value || isSecurityLoading.value
@@ -150,46 +162,6 @@ const analyzeWebsite = async () => {
   }
 };
 
-const clearPolling = () => {
-  if (pollInterval.value) {
-    clearInterval(pollInterval.value);
-    pollInterval.value = null;
-    pollingAttempts.value = 0;
-  }
-};
-
-const startPolling = (auditId: number) => {
-  clearPolling();
-
-  pollInterval.value = setInterval(async () => {
-    pollingAttempts.value++;
-
-    if (pollingAttempts.value >= MAX_POLLING_ATTEMPTS) {
-      clearPolling();
-      auditStore.setError('Превышено время ожидания анализа. Попробуйте позже.');
-      return;
-    }
-
-    try {
-      const response = await auditStore.checkAuditStatus(auditId);
-
-      if (!response || !response.data) return;
-
-      const auditData = response.data;
-
-      if (auditData.status === 'completed') {
-        clearPolling();
-        auditStore.updateFromPolling(auditData);
-      } else if (auditData.status === 'failed') {
-        clearPolling();
-        auditStore.setError(auditData.error_message || 'Ошибка анализа');
-      }
-    } catch (err) {
-      logger.error('Polling error:', err);
-    }
-  }, POLLING_INTERVAL_MS);
-};
-
 onMounted(() => {
   const urlParam = route.query.url as string;
   const autoStart = route.query.autoStart as string;
@@ -205,10 +177,6 @@ onMounted(() => {
   }
 });
 
-onBeforeUnmount(() => {
-  clearPolling();
-});
-
 const isAuditReady = computed(() => {
   return [
     performanceScore.value,
@@ -218,12 +186,63 @@ const isAuditReady = computed(() => {
   ].some((v) => v !== null && typeof v === "number");
 });
 
+const reportData = computed<AuditReportData>(() => ({
+  url: websiteUrl.value || "—",
+  auditedAt: new Date().toISOString(),
+  scores: {
+    performance: performanceScore.value,
+    accessibility: accessibilityScore.value,
+    bestPractices: bestPracticesScore.value,
+    seo: seoScore.value,
+  },
+  vitals: {
+    lcp: lcp.value,
+    fid: fid.value,
+    cls: cls.value,
+    fcp: fcp.value,
+    tbt: tbt.value,
+    speedIndex: speedIndex.value,
+  },
+  securityAudit: securityAudit.value,
+  recommendations: recommendations.value,
+}));
+
+const getCurrentShareUrl = async (): Promise<string> => {
+  if (!currentAuditId.value) {
+    throw new Error("Аудит ещё не сохранён");
+  }
+
+  const response = await historyApi.createAuditShareLink(currentAuditId.value);
+  const token = response.data.token;
+
+  return `${window.location.origin}/report/${token}`;
+};
+
 const isSecurityReady = computed(() => {
   return securityAudit.value !== null || auditStore.isSecurityLoading;
 });
 </script>
 
 <style scoped>
+
+.dashboard-report-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  align-items: flex-start;
+  margin: 1.5rem 0 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .dashboard-report-actions {
+    flex-direction: column;
+    justify-content: stretch;
+  }
+
+  .dashboard-report-actions > :deep(*) {
+    width: 100%;
+  }
+}
 
 .guest-banner {
   margin: 2rem 0;
