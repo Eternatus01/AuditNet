@@ -2,7 +2,7 @@
   <div class="sidebar-logo">
     <div class="logo-icon">
       <slot name="icon">
-        <img src="/logo.png?v=4" alt="AuditNet" class="logo-image" />
+        <img src="/logo.png" alt="AuditNet" class="logo-image" />
       </slot>
     </div>
     <span v-if="!collapsed" class="logo-text">
