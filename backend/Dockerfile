@@ -2,6 +2,10 @@ FROM php:8.2-cli
 
 WORKDIR /var/www
 
+ENV APP_URL=http://localhost
+ENV FRONTEND_URL=http://localhost:5173
+ENV SANCTUM_STATEFUL_DOMAINS=localhost,localhost:5173
+
 # Install system dependencies
 RUN apt-get update && \
     apt-get install -y \
