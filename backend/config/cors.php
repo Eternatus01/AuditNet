@@ -30,6 +30,7 @@ return [
         'http://localhost:3000',
         'http://127.0.0.1:5173',
         'https://auditnet.onrender.com',
+        'https://xn--80aidlz3acc.xn--p1ai',
         'http://xn--80aidlz3acc.xn--p1ai',
         'http://xn--80aidlz3acc.xn--p1ai:5173',
         'http://138.16.177.238',
@@ -38,7 +39,7 @@ return [
 
     'allowed_origins_patterns' => [
         '/\.onrender\.com$/',
-        '/^http:\/\/xn--80aidlz3acc\.xn--p1ai(:\d+)?$/',
+        '/^https?:\/\/xn--80aidlz3acc\.xn--p1ai(:\d+)?$/',
         '/^http:\/\/138\.16\.177\.238(:\d+)?$/',
     ],
 

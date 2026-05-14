@@ -215,7 +215,7 @@ const getCurrentShareUrl = async (): Promise<string> => {
   const response = await historyApi.createAuditShareLink(currentAuditId.value);
   const token = response.data.token;
 
-  return `${window.location.origin}/report/${token}`;
+  return decodeURI(`${window.location.origin}/report/${token}`);
 };
 
 const isSecurityReady = computed(() => {
@@ -229,7 +229,7 @@ const isSecurityReady = computed(() => {
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
-  align-items: flex-start;
+  align-items: flex-end;
   margin: 1.5rem 0 0.5rem;
 }
 

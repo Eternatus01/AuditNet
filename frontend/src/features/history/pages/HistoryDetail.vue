@@ -168,7 +168,7 @@ const getShareUrl = async (): Promise<string> => {
   const response = await historyApi.createAuditShareLink(audit.value.id);
   const token = response.data.token;
 
-  return `${window.location.origin}/report/${token}`;
+  return decodeURI(`${window.location.origin}/report/${token}`);
 };
 
 const securityAuditForView = computed<SecurityAudit | null>(() => {

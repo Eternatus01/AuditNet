@@ -57,6 +57,9 @@ const publicUrl = ref("");
 const statusMessage = ref("");
 const hasError = ref(false);
 
+const normalizePublicUrl = (url: string): string =>
+  decodeURI(url).replace("xn--80aidlz3acc.xn--p1ai", "аудитнет.рф");
+
 const closeMenu = () => {
   isOpen.value = false;
 };
@@ -69,7 +72,7 @@ const loadShareUrl = async () => {
   hasError.value = false;
 
   try {
-    publicUrl.value = await props.getShareUrl();
+    publicUrl.value = normalizePublicUrl(await props.getShareUrl());
   } catch {
     hasError.value = true;
     statusMessage.value = "Не удалось создать публичную ссылку.";
@@ -104,10 +107,12 @@ const copyLink = async () => {
   if (!publicUrl.value) return;
 
   try {
+    const link = normalizePublicUrl(publicUrl.value);
+
     if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(publicUrl.value);
+      await navigator.clipboard.writeText(link);
     } else {
-      await copyFallback(publicUrl.value);
+      await copyFallback(link);
     }
 
     hasError.value = false;
