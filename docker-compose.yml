@@ -6,7 +6,7 @@ services:
     volumes:
       - ./backend:/var/www
       - ./backend/storage:/var/www/storage
-    command: sh -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+    command: sh -c "until php artisan migrate --force; do echo 'Waiting for database...'; sleep 3; done; php artisan serve --host=0.0.0.0 --port=8000"
     environment:
       - APP_URL=https://xn--80aidlz3acc.xn--p1ai
       - FRONTEND_URL=https://xn--80aidlz3acc.xn--p1ai
@@ -19,8 +19,10 @@ services:
       - DB_USERNAME=audituser
       - DB_PASSWORD=secret_vps_password_2026
     depends_on:
-      - db
-      - lighthouse
+      db:
+        condition: service_healthy
+      lighthouse:
+        condition: service_started
     networks:
       - default
 
@@ -68,6 +70,11 @@ services:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "audituser", "-psecret_vps_password_2026"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   phpmyadmin:
     image: phpmyadmin:5.2
