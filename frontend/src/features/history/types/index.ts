@@ -26,6 +26,7 @@ export interface AuditRecommendation {
 }
 
 export interface Audit {
+  type?: 'audit';
   id: number;
   url: string;
   status: string;
@@ -46,6 +47,42 @@ export interface Audit {
   recommendations?: AuditRecommendation[];
 }
 
+export interface ComparisonSite {
+  id: number;
+  url: string;
+  sort_order: number;
+  performance: number | null;
+  accessibility: number | null;
+  best_practices: number | null;
+  seo: number | null;
+  lcp: number | null;
+  fid: number | null;
+  cls: number | null;
+  fcp: number | null;
+  tbt: number | null;
+  speed_index: number | null;
+  security_audit?: SecurityAuditData | null;
+  recommendations?: AuditRecommendation[];
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AuditComparison {
+  type: 'comparison';
+  id: number;
+  user_id: number;
+  title: string | null;
+  status: string;
+  error_message: string | null;
+  audited_at: string | null;
+  created_at: string;
+  updated_at: string;
+  sites: ComparisonSite[];
+}
+
+export type HistoryItem = Audit | AuditComparison;
+
 export interface PaginationMeta {
   current_page: number;
   last_page: number;
@@ -63,6 +100,11 @@ export interface PaginatedResponse<T> {
 export interface AuditDetailResponse {
   success: boolean;
   data: Audit;
+}
+
+export interface ComparisonDetailResponse {
+  success: boolean;
+  data: AuditComparison;
 }
 
 export interface ShareLinkResponse {

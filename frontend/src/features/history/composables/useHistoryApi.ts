@@ -1,9 +1,9 @@
 import { apiClient } from "@/shared/utils/apiClient";
 import { handleApiError } from "@/shared/utils/errorHandling";
-import type { Audit, PaginatedResponse, AuditDetailResponse, ShareLinkResponse } from "../types";
+import type { AuditDetailResponse, HistoryItem, PaginatedResponse, ShareLinkResponse } from "../types";
 
 export const useHistoryApi = () => {
-  const fetchHistory = async (page = 1): Promise<PaginatedResponse<Audit>> => {
+  const fetchHistory = async (page = 1): Promise<PaginatedResponse<HistoryItem>> => {
     try {
       return await apiClient<PaginatedResponse<Audit>>(`/audit/history?page=${page}`, {
         method: "GET",

@@ -10,6 +10,7 @@ class PublicAuditResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'type' => 'audit',
             'id' => $this->id,
             'url' => $this->url,
             'status' => $this->status,

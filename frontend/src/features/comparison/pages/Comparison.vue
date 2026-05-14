@@ -6,7 +6,7 @@
         Добавьте несколько URL и сравните их ключевые показатели в одном отчёте
       </p>
       <div class="examples-hint">
-        Доступно только авторизованным пользователям, результаты сравнения не сохраняются в историю
+        Доступно только авторизованным пользователям, результаты сравнения сохраняются в историю
       </div>
     </div>
 
@@ -78,130 +78,29 @@
       {{ errorMessage }}
     </div>
 
-    <section v-if="hasSuccessfulResults" class="comparison-results">
-      <div class="section-header">
-        <h2 class="section-title">Сравнение показателей</h2>
-        <span class="comparison-count">{{ successfulResults.length }} сайта</span>
-      </div>
-      <p class="section-subtitle">
-        Лучшие значения подсвечены. Для оценок выше значит лучше, для временных метрик ниже значит лучше.
-      </p>
-
-      <div class="comparison-summary">
-        <article
-          v-for="result in successfulResults"
-          :key="result.url"
-          class="site-summary-card"
-        >
-          <div class="site-summary-top">
-            <h3>{{ getHostname(result.url) }}</h3>
-            <a :href="result.url" target="_blank" rel="noopener noreferrer">
-              {{ result.url }}
-            </a>
-          </div>
-          <div class="site-summary-score" :class="getScoreStatus(getAverageScore(result.data))">
-            {{ formatScore(getAverageScore(result.data)) }}
-          </div>
-          <p>Средняя оценка Lighthouse</p>
-        </article>
-      </div>
-
-      <div class="comparison-table-card">
-        <div class="comparison-table-wrapper">
-          <table class="comparison-table">
-            <thead>
-              <tr>
-                <th>Показатель</th>
-                <th
-                  v-for="result in successfulResults"
-                  :key="result.url"
-                >
-                  {{ getHostname(result.url) }}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="metric in comparisonMetrics"
-                :key="metric.key"
-              >
-                <td>
-                  <strong>{{ metric.label }}</strong>
-                  <span>{{ metric.description }}</span>
-                </td>
-                <td
-                  v-for="result in successfulResults"
-                  :key="`${metric.key}-${result.url}`"
-                  :class="[
-                    'metric-cell',
-                    getMetricCellClass(metric, result),
-                    { 'is-best': isBestMetricValue(metric, result) },
-                  ]"
-                >
-                  {{ metric.format(metric.getValue(result.data), result.data) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div v-if="failedResults.length > 0" class="failed-sites">
-        <h3>Не удалось проанализировать</h3>
-        <ul>
-          <li
-            v-for="result in failedResults"
-            :key="result.url"
-          >
-            <strong>{{ result.url }}</strong>
-            <span>{{ result.error }}</span>
-          </li>
-        </ul>
-      </div>
-    </section>
+    <ComparisonResults :results="results" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useAuditApi } from "@/features/dashboard/composables/useAuditApi";
 import { useAuthStore } from "@/features/auth/stores/auth";
+import { useComparisonApi } from "../composables/useComparisonApi";
 import { Button } from "@/shared/ui/atoms";
 import LoadingState from "@/shared/ui/molecules/LoadingState.vue";
-import {
-  formatCLS,
-  formatFCP,
-  formatFID,
-  formatLCP,
-  formatSpeedIndex,
-  formatTBT,
-} from "@/shared/utils/formatters";
-import type { GuestAuditData } from "@/features/dashboard/types";
+import type { AuditComparison, ComparisonSite } from "@/features/history/types";
+import ComparisonResults from "../components/ComparisonResults.vue";
+import type { ComparisonResult } from "../utils/comparisonHelpers";
+import { mapComparisonSiteToResult } from "../utils/mappers";
 
 const MIN_SITES = 2;
 const MAX_SITES = 5;
 
-type ComparisonDirection = "higher" | "lower";
-
-interface ComparisonResult {
-  url: string;
-  data: GuestAuditData | null;
-  error: string | null;
-}
-
-interface ComparisonMetric {
-  key: string;
-  label: string;
-  description: string;
-  direction: ComparisonDirection;
-  getValue: (_data: GuestAuditData) => number | null;
-  format: (_value: number | null, _data: GuestAuditData) => string;
-}
-
-const auditApi = useAuditApi();
+const comparisonApi = useComparisonApi();
 const authStore = useAuthStore();
 const siteInputs = ref<string[]>(["", ""]);
 const results = ref<ComparisonResult[]>([]);
+const currentComparison = ref<AuditComparison | null>(null);
 const isLoading = ref(false);
 const errorMessage = ref("");
 
@@ -240,153 +139,6 @@ const isAnalyzeButtonDisabled = computed(() => {
   return !canAnalyze.value;
 });
 
-const successfulResults = computed(() => {
-  return results.value.filter((result): result is ComparisonResult & { data: GuestAuditData } => {
-    return result.data !== null;
-  });
-});
-
-const failedResults = computed(() => {
-  return results.value.filter((result) => result.data === null);
-});
-
-const hasSuccessfulResults = computed(() => successfulResults.value.length > 0);
-
-const getSecurityHeadersCount = (data: GuestAuditData): number | null => {
-  const headers = data.security_audit?.headers;
-  if (!headers) return null;
-  return Object.values(headers).filter((value) => value === true).length;
-};
-
-const getSecurityHeadersTotal = (data: GuestAuditData): number => {
-  return Object.keys(data.security_audit?.headers ?? {}).length;
-};
-
-const getSensitiveFilesCount = (data: GuestAuditData): number | null => {
-  const sensitiveFiles = data.security_audit?.sensitive_files;
-  if (!sensitiveFiles) return null;
-  return Object.values(sensitiveFiles).filter(Boolean).length;
-};
-
-const formatScore = (value: number | null): string => {
-  if (value === null) return "--";
-  return Math.round(value).toString();
-};
-
-const formatScoreWithMax = (value: number | null): string => {
-  if (value === null) return "--";
-  return `${Math.round(value)} / 100`;
-};
-
-const formatSecurityHeaders = (value: number | null, data: GuestAuditData): string => {
-  if (value === null) return "--";
-  return `${value} / ${getSecurityHeadersTotal(data)}`;
-};
-
-const formatCount = (value: number | null): string => {
-  if (value === null) return "--";
-  return value.toString();
-};
-
-const comparisonMetrics: ComparisonMetric[] = [
-  {
-    key: "performance",
-    label: "Производительность",
-    description: "Performance",
-    direction: "higher",
-    getValue: (data) => data.performance,
-    format: formatScoreWithMax,
-  },
-  {
-    key: "accessibility",
-    label: "Доступность",
-    description: "Accessibility",
-    direction: "higher",
-    getValue: (data) => data.accessibility,
-    format: formatScoreWithMax,
-  },
-  {
-    key: "best-practices",
-    label: "Стандарты качества",
-    description: "Best Practices",
-    direction: "higher",
-    getValue: (data) => data.best_practices,
-    format: formatScoreWithMax,
-  },
-  {
-    key: "seo",
-    label: "SEO",
-    description: "Search Engine Optimization",
-    direction: "higher",
-    getValue: (data) => data.seo,
-    format: formatScoreWithMax,
-  },
-  {
-    key: "lcp",
-    label: "LCP",
-    description: "Largest Contentful Paint",
-    direction: "lower",
-    getValue: (data) => data.lcp,
-    format: (value) => formatLCP(value),
-  },
-  {
-    key: "inp",
-    label: "INP",
-    description: "Interaction to Next Paint",
-    direction: "lower",
-    getValue: (data) => data.fid,
-    format: (value) => formatFID(value),
-  },
-  {
-    key: "cls",
-    label: "CLS",
-    description: "Cumulative Layout Shift",
-    direction: "lower",
-    getValue: (data) => data.cls,
-    format: (value) => formatCLS(value),
-  },
-  {
-    key: "fcp",
-    label: "FCP",
-    description: "First Contentful Paint",
-    direction: "lower",
-    getValue: (data) => data.fcp,
-    format: (value) => formatFCP(value),
-  },
-  {
-    key: "tbt",
-    label: "TBT",
-    description: "Total Blocking Time",
-    direction: "lower",
-    getValue: (data) => data.tbt,
-    format: (value) => formatTBT(value),
-  },
-  {
-    key: "speed-index",
-    label: "Speed Index",
-    description: "Скорость визуальной загрузки",
-    direction: "lower",
-    getValue: (data) => data.speed_index,
-    format: (value) => formatSpeedIndex(value),
-  },
-  {
-    key: "security-headers",
-    label: "Security headers",
-    description: "Найденные защитные заголовки",
-    direction: "higher",
-    getValue: getSecurityHeadersCount,
-    format: formatSecurityHeaders,
-  },
-  {
-    key: "sensitive-files",
-    label: "Публичные sensitive files",
-    description: "Чем меньше, тем лучше",
-    direction: "lower",
-    getValue: getSensitiveFilesCount,
-    format: formatCount,
-  },
-];
-
 const addSiteInput = (): void => {
   if (siteInputs.value.length < MAX_SITES) {
     siteInputs.value.push("");
@@ -404,6 +156,7 @@ const analyzeSites = async (): Promise<void> => {
 
   if (!authStore.isAuthenticated) {
     results.value = [];
+    currentComparison.value = null;
     errorMessage.value =
       "Вы не авторизованы. Доступ к сравнению сайтов доступен только авторизованным пользователям.";
     return;
@@ -418,26 +171,12 @@ const analyzeSites = async (): Promise<void> => {
   isLoading.value = true;
   errorMessage.value = "";
   results.value = [];
+  currentComparison.value = null;
 
   try {
-    results.value = await Promise.all(
-      urls.map(async (url): Promise<ComparisonResult> => {
-        try {
-          const response = await auditApi.analyzeGuestWebsite(url);
-          return {
-            url,
-            data: response.data,
-            error: null,
-          };
-        } catch (error: unknown) {
-          return {
-            url,
-            data: null,
-            error: error instanceof Error ? error.message : "Ошибка анализа сайта",
-          };
-        }
-      })
-    );
+    const response = await comparisonApi.analyzeComparison(urls);
+    currentComparison.value = response.data;
+    results.value = response.data.sites.map(mapComparisonSiteToResult);
 
     if (!results.value.some((result) => result.data !== null)) {
       errorMessage.value = "Не удалось проанализировать сайты. Попробуйте позже.";
@@ -447,63 +186,6 @@ const analyzeSites = async (): Promise<void> => {
   }
 };
 
-const getAverageScore = (data: GuestAuditData): number | null => {
-  const scores = [data.performance, data.accessibility, data.best_practices, data.seo].filter(
-    (score): score is number => typeof score === "number"
-  );
-
-  if (scores.length === 0) return null;
-  return scores.reduce((sum, score) => sum + score, 0) / scores.length;
-};
-
-const getScoreStatus = (value: number | null): "good" | "moderate" | "poor" | "unknown" => {
-  if (value === null) return "unknown";
-  if (value >= 90) return "good";
-  if (value >= 50) return "moderate";
-  return "poor";
-};
-
-const getMetricBestValue = (metric: ComparisonMetric): number | null => {
-  const values = successfulResults.value
-    .map((result) => metric.getValue(result.data))
-    .filter((value): value is number => typeof value === "number");
-
-  if (values.length === 0) return null;
-  return metric.direction === "higher" ? Math.max(...values) : Math.min(...values);
-};
-
-const isBestMetricValue = (metric: ComparisonMetric, result: ComparisonResult): boolean => {
-  if (!result.data) return false;
-
-  const value = metric.getValue(result.data);
-  const bestValue = getMetricBestValue(metric);
-
-  return value !== null && bestValue !== null && value === bestValue;
-};
-
-const getMetricCellClass = (
-  metric: ComparisonMetric,
-  result: ComparisonResult
-): "good" | "moderate" | "poor" | "unknown" => {
-  if (!result.data) return "unknown";
-
-  const value = metric.getValue(result.data);
-  if (value === null) return "unknown";
-
-  if (["performance", "accessibility", "best-practices", "seo"].includes(metric.key)) {
-    return getScoreStatus(value);
-  }
-
-  return isBestMetricValue(metric, result) ? "good" : "unknown";
-};
-
-const getHostname = (url: string): string => {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
-};
 </script>
 
 <style scoped>

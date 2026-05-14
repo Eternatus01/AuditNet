@@ -28,12 +28,34 @@ class PreventSsrfAttacks
 
     public function handle(Request $request, Closure $next): Response
     {
+        $urls = $request->input('urls');
+        if (is_array($urls)) {
+            foreach ($urls as $url) {
+                $blockedResponse = $this->validateUrl($url);
+                if ($blockedResponse) {
+                    return $blockedResponse;
+                }
+            }
+
+            return $next($request);
+        }
+
         $url = $request->input('url');
 
         if (!$url) {
             return $next($request);
         }
 
+        $blockedResponse = $this->validateUrl($url);
+        if ($blockedResponse) {
+            return $blockedResponse;
+        }
+
+        return $next($request);
+    }
+
+    private function validateUrl(string $url): ?Response
+    {
         if (!$this->isValidUrl($url)) {
             return response()->json([
                 'success' => false,
@@ -48,7 +70,7 @@ class PreventSsrfAttacks
             ], 403);
         }
 
-        return $next($request);
+        return null;
     }
 
     protected function isValidUrl(string $url): bool

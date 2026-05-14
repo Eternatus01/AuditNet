@@ -26,14 +26,22 @@
     </EmptyState>
 
     <div v-else-if="audits && audits.length > 0" class="audits-list">
-      <AuditCard
-        v-for="audit in audits"
-        :key="audit.id"
-        :audit="audit"
-        :format-date="formatDate"
-        :get-score-class="getScoreClass"
-        @click="viewAudit"
-      />
+      <template v-for="item in audits" :key="`${item.type || 'audit'}-${item.id}`">
+        <AuditCard
+          v-if="isAuditItem(item)"
+          :audit="item"
+          :format-date="formatDate"
+          :get-score-class="getScoreClass"
+          @click="viewAudit"
+        />
+        <ComparisonCard
+          v-else
+          :comparison="item"
+          :format-date="formatDate"
+          :get-score-class="getScoreClass"
+          @click="viewComparison"
+        />
+      </template>
 
       <PaginationControls
         :pagination="pagination"
@@ -52,14 +60,15 @@ import { Button } from "@/shared/ui/atoms";
 import EmptyState from "@/shared/ui/molecules/EmptyState.vue";
 import LoadingState from "@/shared/ui/molecules/LoadingState.vue";
 import AuditCard from "../components/AuditCard.vue";
+import ComparisonCard from "../components/ComparisonCard.vue";
 import PaginationControls from "../components/PaginationControls.vue";
-import type { Audit, PaginationMeta } from "../types";
+import type { Audit, HistoryItem, PaginationMeta } from "../types";
 
 const router = useRouter();
 const historyApi = useHistoryApi();
 const { formatDate, getScoreClass } = useHistoryHelpers();
 
-const audits = ref<Audit[]>([]);
+const audits = ref<HistoryItem[]>([]);
 const pagination = ref<PaginationMeta | null>(null);
 const isLoading = ref<boolean>(false);
 const error = ref<string>("");
@@ -96,6 +105,14 @@ const loadPage = (page: number): void => {
 
 const viewAudit = (id: number): void => {
   router.push(`/history/${id}`);
+};
+
+const viewComparison = (id: number): void => {
+  router.push(`/history/comparisons/${id}`);
+};
+
+const isAuditItem = (item: HistoryItem): item is Audit => {
+  return (item.type || 'audit') === 'audit';
 };
 
 onMounted(() => {

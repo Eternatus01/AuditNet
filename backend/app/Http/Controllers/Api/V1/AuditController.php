@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\BaseApiController;
 use App\Http\Requests\AuditRequest;
 use App\Http\Resources\AuditResource;
+use App\Http\Resources\AuditComparisonResource;
 use App\Http\Resources\PublicAuditResource;
 use App\Repositories\AuditRepository;
 use App\Services\Audit\AuditService;
@@ -12,6 +13,7 @@ use App\Services\Audit\RecommendationParser;
 use App\Services\Security\SecurityAuditService;
 use App\Enums\AuditStatus;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class AuditController extends BaseApiController
 {
@@ -105,14 +107,27 @@ class AuditController extends BaseApiController
         try {
             $user = $this->requireAuthenticatedUser();
 
-            $audits = $this->auditRepository->getUserAuditsPaginated($user, 20);
+            $perPage = 20;
+            $page = LengthAwarePaginator::resolveCurrentPage();
+            $audits = $user->audits()->with(['securityAudit', 'recommendations'])->get();
+            $comparisons = $user->auditComparisons()->with('sites')->get();
+            $items = $audits
+                ->map(fn ($audit) => ['type' => 'audit', 'created_at' => $audit->created_at, 'resource' => new AuditResource($audit)])
+                ->concat($comparisons->map(fn ($comparison) => [
+                    'type' => 'comparison',
+                    'created_at' => $comparison->created_at,
+                    'resource' => new AuditComparisonResource($comparison),
+                ]))
+                ->sortByDesc('created_at')
+                ->values();
+            $pageItems = $items->slice(($page - 1) * $perPage, $perPage)->values();
 
             return response()->json([
                 'success' => true,
-                'data' => AuditResource::collection($audits)->response()->getData(true)['data'],
-                'current_page' => $audits->currentPage(),
-                'last_page' => $audits->lastPage(),
-                'total' => $audits->total(),
+                'data' => $pageItems->map(fn ($item) => $item['resource']->resolve())->values(),
+                'current_page' => $page,
+                'last_page' => max(1, (int) ceil($items->count() / $perPage)),
+                'total' => $items->count(),
             ]);
 
         } catch (\Exception $e) {

@@ -24,9 +24,20 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/features/public-report/pages/PublicReport.vue"),
   },
   {
+    path: "/comparison-report/:token",
+    name: "public-comparison-report",
+    component: () => import("@/features/comparison/pages/PublicComparisonReport.vue"),
+  },
+  {
     path: "/history",
     name: "history",
     component: () => import("@/features/history/pages/History.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/history/comparisons/:id",
+    name: "comparison-detail",
+    component: () => import("@/features/comparison/pages/ComparisonDetail.vue"),
     meta: { requiresAuth: true },
   },
   {

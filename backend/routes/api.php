@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\AuditController;
+use App\Http\Controllers\Api\V1\ComparisonController;
 use App\Http\Controllers\Api\V1\SecurityController;
 use App\Http\Controllers\Api\V1\GuestAuditController;
 use App\Http\Resources\UserResource;
@@ -44,6 +45,10 @@ Route::prefix('audit')->middleware(['throttle:guest'])->group(function () {
     Route::get('/public/{token}', [AuditController::class, 'publicShow']);
 });
 
+Route::prefix('comparisons')->middleware(['throttle:guest'])->group(function () {
+    Route::get('/public/{token}', [ComparisonController::class, 'publicShow']);
+});
+
 Route::prefix('audit')->middleware(['throttle:api', 'auth:sanctum'])->group(function () {
     Route::post('/analyze', [AuditController::class, 'analyze'])->middleware('prevent.ssrf');
     Route::post('/security-audit', [SecurityController::class, 'analyze'])->middleware('prevent.ssrf');
@@ -51,6 +56,12 @@ Route::prefix('audit')->middleware(['throttle:api', 'auth:sanctum'])->group(func
     Route::get('/history/{id}', [AuditController::class, 'show']);
     Route::post('/history/{id}/share', [AuditController::class, 'share']);
     Route::get('/status/{id}', [AuditController::class, 'status']);
+});
+
+Route::prefix('comparisons')->middleware(['throttle:api', 'auth:sanctum'])->group(function () {
+    Route::post('/analyze', [ComparisonController::class, 'analyze'])->middleware('prevent.ssrf');
+    Route::get('/history/{id}', [ComparisonController::class, 'show']);
+    Route::post('/history/{id}/share', [ComparisonController::class, 'share']);
 });
 
 
