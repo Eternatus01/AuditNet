@@ -1,5 +1,10 @@
 <?php
 
+$allowedOrigins = array_values(array_unique(array_filter(array_map('trim', explode(
+    ',',
+    env('CORS_ALLOWED_ORIGINS', env('FRONTEND_URL', 'http://localhost:5173'))
+)))));
+
 return [
 
     /*
@@ -19,20 +24,22 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        env('FRONTEND_URL', 'http://localhost:5173'),
+    'allowed_origins' => array_values(array_unique(array_merge($allowedOrigins, [
         'http://localhost:5173',
         'http://localhost:5174',
         'http://localhost:3000',
+        'http://127.0.0.1:5173',
         'https://auditnet.onrender.com',
-        'http://91.142.74.132',
-        'http://91.142.74.132:5173',
-        'http://91.142.74.132:8000',
-    ],
+        'http://xn--80aidlz3acc.xn--p1ai',
+        'http://xn--80aidlz3acc.xn--p1ai:5173',
+        'http://138.16.177.238',
+        'http://138.16.177.238:5173',
+    ]))),
 
     'allowed_origins_patterns' => [
         '/\.onrender\.com$/',
-        '/^http:\/\/91\.142\.74\.132(:\d+)?$/',
+        '/^http:\/\/xn--80aidlz3acc\.xn--p1ai(:\d+)?$/',
+        '/^http:\/\/138\.16\.177\.238(:\d+)?$/',
     ],
 
     'allowed_headers' => ['*'],
