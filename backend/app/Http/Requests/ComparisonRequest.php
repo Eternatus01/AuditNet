@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ComparisonRequest extends FormRequest
@@ -15,8 +16,30 @@ class ComparisonRequest extends FormRequest
     {
         return [
             'urls' => ['required', 'array', 'min:2', 'max:5'],
-            'urls.*' => ['required', 'url', 'max:2048', 'distinct'],
+            'urls.*' => ['required', 'string', 'max:2048', $this->httpUrlRule(), 'distinct'],
         ];
+    }
+
+    private function httpUrlRule(): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail): void {
+            if (!is_string($value)) {
+                $fail('Введите корректные URL сайтов');
+
+                return;
+            }
+
+            $parsed = parse_url($value);
+            if (!$parsed || !isset($parsed['scheme'], $parsed['host']) || $parsed['host'] === '') {
+                $fail('Введите корректные URL сайтов');
+
+                return;
+            }
+
+            if (!in_array(strtolower($parsed['scheme']), ['http', 'https'], true)) {
+                $fail('Введите корректные URL сайтов');
+            }
+        };
     }
 
     public function messages(): array

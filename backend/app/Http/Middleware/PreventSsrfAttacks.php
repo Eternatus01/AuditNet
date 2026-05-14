@@ -31,6 +31,9 @@ class PreventSsrfAttacks
         $urls = $request->input('urls');
         if (is_array($urls)) {
             foreach ($urls as $url) {
+                if (!is_string($url) || $url === '') {
+                    continue;
+                }
                 $blockedResponse = $this->validateUrl($url);
                 if ($blockedResponse) {
                     return $blockedResponse;
@@ -42,7 +45,7 @@ class PreventSsrfAttacks
 
         $url = $request->input('url');
 
-        if (!$url) {
+        if (!$url || !is_string($url)) {
             return $next($request);
         }
 
@@ -75,26 +78,93 @@ class PreventSsrfAttacks
 
     protected function isValidUrl(string $url): bool
     {
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            return false;
-        }
-
         $parsed = parse_url($url);
-        if (!$parsed || !isset($parsed['scheme']) || !isset($parsed['host'])) {
+        if (!$parsed || !isset($parsed['scheme'], $parsed['host']) || $parsed['host'] === '') {
             return false;
         }
 
-        if (!in_array($parsed['scheme'], ['http', 'https'])) {
+        if (!in_array(strtolower($parsed['scheme']), ['http', 'https'], true)) {
             return false;
         }
 
-        return true;
+        $asciiUrl = $this->urlWithAsciiHost($url, $parsed);
+
+        if (filter_var($asciiUrl, FILTER_VALIDATE_URL)) {
+            return true;
+        }
+
+        if ($asciiUrl === $url && preg_match('/[^\x00-\x7F]/', $parsed['host'])) {
+            return (bool) preg_match('/^[\p{L}\p{N}\p{M}.-]+$/u', $parsed['host']);
+        }
+
+        return false;
+    }
+
+    private function urlWithAsciiHost(string $url, ?array $parsed = null): string
+    {
+        $parsed ??= parse_url($url);
+        if (!$parsed || empty($parsed['host'])) {
+            return $url;
+        }
+
+        $host = $parsed['host'];
+        if (str_starts_with($host, '[')) {
+            return $url;
+        }
+
+        if (!function_exists('idn_to_ascii')) {
+            return $url;
+        }
+
+        $ascii = @idn_to_ascii($host, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+        if ($ascii === false || $ascii === $host) {
+            return $url;
+        }
+
+        $parsed['host'] = $ascii;
+
+        return $this->buildUrlFromParts($parsed);
+    }
+
+    private function buildUrlFromParts(array $parts): string
+    {
+        $scheme = ($parts['scheme'] ?? 'http') . '://';
+        $result = $scheme;
+
+        if (isset($parts['user']) || isset($parts['pass'])) {
+            $result .= ($parts['user'] ?? '');
+            if (isset($parts['pass'])) {
+                $result .= ':' . $parts['pass'];
+            }
+            $result .= '@';
+        }
+
+        $result .= $parts['host'] ?? '';
+        if (isset($parts['port'])) {
+            $result .= ':' . $parts['port'];
+        }
+        $result .= $parts['path'] ?? '';
+        if (isset($parts['query'])) {
+            $result .= '?' . $parts['query'];
+        }
+        if (isset($parts['fragment'])) {
+            $result .= '#' . $parts['fragment'];
+        }
+
+        return $result;
     }
 
     protected function isSsrfAttempt(string $url): bool
     {
         $parsed = parse_url($url);
         $host = $parsed['host'] ?? '';
+
+        if ($host !== '' && !str_starts_with($host, '[') && function_exists('idn_to_ascii')) {
+            $ascii = @idn_to_ascii($host, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+            if ($ascii !== false) {
+                $host = $ascii;
+            }
+        }
 
         if (in_array(strtolower($host), $this->blockedDomains)) {
             return true;
@@ -127,12 +197,12 @@ class PreventSsrfAttacks
         [$subnet, $bits] = explode('/', $range);
         $ip = ip2long($ip);
         $subnet = ip2long($subnet);
-        
+
         if ($ip === false || $subnet === false) {
             return false;
         }
-        
-        $mask = -1 << (32 - (int)$bits);
+
+        $mask = -1 << (32 - (int) $bits);
         $subnet &= $mask;
 
         return ($ip & $mask) === $subnet;
@@ -145,32 +215,31 @@ class PreventSsrfAttacks
         }
 
         [$subnet, $bits] = explode('/', $range);
-        
+
         $ip = inet_pton($ip);
         $subnet = inet_pton($subnet);
-        
+
         if ($ip === false || $subnet === false) {
             return false;
         }
-        
-        $bitsInt = (int)$bits;
-        $bytesToCheck = (int)($bitsInt / 8);
+
+        $bitsInt = (int) $bits;
+        $bytesToCheck = (int) ($bitsInt / 8);
         $bitsInLastByte = $bitsInt % 8;
-        
+
         for ($i = 0; $i < $bytesToCheck; $i++) {
             if ($ip[$i] !== $subnet[$i]) {
                 return false;
             }
         }
-        
+
         if ($bitsInLastByte > 0) {
             $mask = 0xFF << (8 - $bitsInLastByte);
             if ((ord($ip[$bytesToCheck]) & $mask) !== (ord($subnet[$bytesToCheck]) & $mask)) {
                 return false;
             }
         }
-        
+
         return true;
     }
 }
-
