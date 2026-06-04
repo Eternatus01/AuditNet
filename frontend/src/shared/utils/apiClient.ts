@@ -35,7 +35,7 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       tokenStorage.remove();
       
-      const publicRoutes = ['/profile', '/dashboard', '/', '/report'];
+      const publicRoutes = ['/profile', '/dashboard', '/', '/report', '/terms', '/reset-password'];
       const currentPath = window.location.pathname;
       
       if (!publicRoutes.some((path) => currentPath === path || currentPath.startsWith(`${path}/`))) {

@@ -2,7 +2,7 @@
   <!-- Гость -->
   <div v-if="!isAuthenticated" class="auth-wrapper">
     <div class="auth-card">
-      <div v-if="!showRegister">
+      <div v-if="authMode === 'login'">
         <Form :validation-schema="loginSchema" class="profile-form" @submit="onLogin">
           <h2>Вход в систему</h2>
 
@@ -15,6 +15,10 @@
             <InputField name="password" type="password" placeholder="Пароль" autocomplete="current-password" label="Пароль" />
           </div>
 
+          <div class="forgot-row">
+            <button type="button" class="link-btn" @click="setAuthMode('forgot')">Забыли пароль?</button>
+          </div>
+
           <Button type="submit" variant="primary" size="lg" :loading="isLoading" full-width>
             Войти
           </Button>
@@ -24,11 +28,11 @@
 
         <p class="switch-link">
           Нет аккаунта?
-          <button class="link-btn" @click="switchMode(true)">Зарегистрироваться</button>
+          <button type="button" class="link-btn" @click="setAuthMode('register')">Зарегистрироваться</button>
         </p>
       </div>
 
-      <div v-else>
+      <div v-else-if="authMode === 'register'">
         <Form :validation-schema="registerSchema" class="profile-form" @submit="onRegister">
           <h2>Регистрация</h2>
 
@@ -36,6 +40,10 @@
             <InputField name="name" type="text" placeholder="Имя" autocomplete="name" label="Имя" />
             <InputField name="email" type="email" placeholder="E-mail" autocomplete="email" label="Email" />
             <InputField name="password" type="password" placeholder="Пароль" autocomplete="new-password" label="Пароль" />
+            <CheckboxField name="terms_accepted">
+              Я принимаю
+              <RouterLink :to="{ name: 'terms' }" target="_blank">пользовательское соглашение</RouterLink>
+            </CheckboxField>
           </div>
 
           <Button type="submit" variant="primary" size="lg" :loading="isLoading" full-width>
@@ -47,7 +55,29 @@
 
         <p class="switch-link">
           Уже есть аккаунт?
-          <button class="link-btn" @click="switchMode(false)">Войти</button>
+          <button type="button" class="link-btn" @click="setAuthMode('login')">Войти</button>
+        </p>
+      </div>
+
+      <div v-else>
+        <Form :validation-schema="forgotPasswordSchema" class="profile-form" @submit="onForgotPassword">
+          <h2>Восстановление пароля</h2>
+          <p class="form-hint">Укажите email — мы отправим ссылку для сброса пароля.</p>
+
+          <div class="form-fields">
+            <InputField name="email" type="email" placeholder="E-mail" autocomplete="email" label="Email" />
+          </div>
+
+          <Button type="submit" variant="primary" size="lg" :loading="isLoading" full-width>
+            Отправить письмо
+          </Button>
+
+          <p v-if="forgotSuccess" class="success-message">{{ forgotSuccess }}</p>
+          <p v-if="forgotError" class="error-message">{{ forgotError }}</p>
+        </Form>
+
+        <p class="switch-link">
+          <button type="button" class="link-btn" @click="setAuthMode('login')">← Вернуться ко входу</button>
         </p>
       </div>
     </div>
@@ -201,8 +231,11 @@ import { Form } from 'vee-validate';
 import { useAuthStore } from "@/features/auth/stores/auth";
 import type { SignInCredentials, SignUpCredentials } from "@/features/auth/types";
 import InputField from "@/shared/ui/molecules/InputField.vue";
+import CheckboxField from "@/shared/ui/molecules/CheckboxField.vue";
 import { Button } from "@/shared/ui/atoms";
-import { loginSchema, registerSchema } from "@/shared/validation/schemas";
+import { loginSchema, registerSchema, forgotPasswordSchema } from "@/shared/validation/schemas";
+import { useAuthApi } from "@/features/auth/composables/useAuthApi";
+import type { ForgotPasswordCredentials } from "@/features/auth/types";
 import IconLucideSettings from "~icons/lucide/settings";
 import IconLucideCheck from "~icons/lucide/check";
 import IconLucideX from "~icons/lucide/x";
@@ -213,12 +246,17 @@ import IconLucideAlertCircle from "~icons/lucide/alert-circle";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const authApi = useAuthApi();
 const { isAuthenticated, error: authError, user } = storeToRefs(authStore);
+
+type AuthMode = "login" | "register" | "forgot";
 
 // --- Auth (гость) ---
 const isLoading = ref(false);
-const showRegister = ref(false);
+const authMode = ref<AuthMode>("login");
 const sessionExpiredMessage = ref<string | null>(null);
+const forgotSuccess = ref<string | null>(null);
+const forgotError = ref<string | null>(null);
 
 onMounted(() => {
   const message = localStorage.getItem('auth_expired_message');
@@ -227,11 +265,32 @@ onMounted(() => {
     localStorage.removeItem('auth_expired_message');
     setTimeout(() => { sessionExpiredMessage.value = null; }, 5000);
   }
+
+  if (router.currentRoute.value.query.mode === 'forgot') {
+    authMode.value = 'forgot';
+  }
 });
 
-const switchMode = (toRegister: boolean) => {
-  showRegister.value = toRegister;
+const setAuthMode = (mode: AuthMode) => {
+  authMode.value = mode;
   authStore.clearError();
+  forgotSuccess.value = null;
+  forgotError.value = null;
+};
+
+const onForgotPassword = async (values: unknown) => {
+  isLoading.value = true;
+  forgotSuccess.value = null;
+  forgotError.value = null;
+
+  try {
+    const message = await authApi.requestPasswordReset(values as ForgotPasswordCredentials);
+    forgotSuccess.value = message;
+  } catch (e: unknown) {
+    forgotError.value = e instanceof Error ? e.message : "Не удалось отправить письмо";
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const onLogin = async (values: unknown) => {
@@ -421,6 +480,26 @@ const avatarInitials = computed(() => {
 }
 
 .link-btn:hover { color: #a78bfa; }
+
+.forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: -0.25rem 0 0.75rem;
+}
+
+.form-hint {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  margin: 0 0 1rem;
+}
+
+.success-message {
+  color: #10b981;
+  font-size: 0.875rem;
+  text-align: center;
+  margin: 1rem 0 0;
+}
 
 .warning-message {
   padding: 1rem;

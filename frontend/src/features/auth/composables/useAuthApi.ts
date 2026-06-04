@@ -7,6 +7,8 @@ import type {
   SignUpCredentials,
   SignInCredentials,
   UpdateProfileCredentials,
+  ForgotPasswordCredentials,
+  ResetPasswordCredentials,
 } from "../types";
 
 export const useAuthApi = () => {
@@ -101,11 +103,56 @@ export const useAuthApi = () => {
     }
   };
 
+  const requestPasswordReset = async (
+    credentials: ForgotPasswordCredentials
+  ): Promise<string> => {
+    try {
+      await getCsrfCookie();
+
+      const response = await apiClient<{ success?: boolean; message?: string }>(
+        "/auth/forgot-password",
+        {
+          method: "POST",
+          data: credentials,
+        }
+      );
+
+      return (
+        response.message ??
+        "Если указанный email зарегистрирован, мы отправили письмо со ссылкой для сброса пароля."
+      );
+    } catch (error: unknown) {
+      const message = extractApiErrorMessage(error, "Не удалось отправить письмо");
+      throw new Error(message);
+    }
+  };
+
+  const resetPassword = async (credentials: ResetPasswordCredentials): Promise<string> => {
+    try {
+      await getCsrfCookie();
+
+      const response = await apiClient<{ success?: boolean; message?: string }>(
+        "/auth/reset-password",
+        {
+          method: "POST",
+          data: credentials,
+        }
+      );
+
+      return response.message ?? "Пароль успешно изменён";
+    } catch (error: unknown) {
+      const message = extractApiErrorMessage(error, "Не удалось сбросить пароль");
+      throw new Error(message);
+    }
+  };
+
   return {
     signUp,
     signIn,
     logout,
     fetchProfile,
     updateProfile,
+    requestPasswordReset,
+    resetPassword,
   };
 };

@@ -8,6 +8,18 @@ export interface SignUpCredentials {
   name: string;
   email: string;
   password: string;
+  terms_accepted: boolean;
+}
+
+export interface ForgotPasswordCredentials {
+  email: string;
+}
+
+export interface ResetPasswordCredentials {
+  email: string;
+  password: string;
+  password_confirmation: string;
+  token: string;
 }
 
 export interface SignInCredentials {

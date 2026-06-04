@@ -16,13 +16,19 @@
           label="Email"
         />
 
-        <InputField
+          <InputField
           name="password"
           type="password"
           placeholder="Пароль"
           autocomplete="current-password"
           label="Пароль"
         />
+      </div>
+
+      <div class="forgot-row">
+        <RouterLink :to="{ name: 'profile', query: { mode: 'forgot' } }" class="forgot-link">
+          Забыли пароль?
+        </RouterLink>
       </div>
 
       <Button type="submit" variant="primary" size="lg" :loading="isLoading" full-width>
@@ -85,6 +91,23 @@ const onSubmit = async (values: unknown): Promise<void> => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.forgot-link {
+  font-size: 0.875rem;
+  color: #7c3aed;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.forgot-link:hover {
+  color: #a78bfa;
 }
 
 .warning-message {

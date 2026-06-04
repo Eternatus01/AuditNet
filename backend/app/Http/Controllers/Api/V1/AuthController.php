@@ -5,11 +5,15 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\BaseApiController;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\LoginUserRequest;
+use App\Http\Requests\ForgotPasswordRequest;
+use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Events\PasswordReset;
 
 class AuthController extends BaseApiController
 {
@@ -75,6 +79,40 @@ class AuthController extends BaseApiController
         } catch (\Exception $e) {
             return $this->errorResponse('Ошибка выхода. Попробуйте позже.', 500);
         }
+    }
+
+    public function forgotPassword(ForgotPasswordRequest $request)
+    {
+        Password::sendResetLink($request->only('email'));
+
+        return $this->successResponse(
+            null,
+            'Если указанный email зарегистрирован, мы отправили письмо со ссылкой для сброса пароля.'
+        );
+    }
+
+    public function resetPassword(ResetPasswordRequest $request)
+    {
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill(['password' => Hash::make($password)])->save();
+                $user->tokens()->delete();
+                event(new PasswordReset($user));
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return $this->successResponse(null, 'Пароль успешно изменён. Теперь вы можете войти.');
+        }
+
+        $message = match ($status) {
+            Password::INVALID_TOKEN => 'Ссылка для сброса пароля недействительна или устарела. Запросите новую.',
+            Password::INVALID_USER => 'Пользователь с таким email не найден.',
+            default => 'Не удалось сбросить пароль. Попробуйте позже.',
+        };
+
+        return $this->errorResponse($message, 422);
     }
 
     public function updateProfile(UpdateProfileRequest $request)

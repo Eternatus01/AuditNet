@@ -21,6 +21,14 @@ class StoreUserRequest extends FormRequest
                 'string',
                 'min:8',
             ],
+            'terms_accepted' => ['required', 'accepted'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'terms_accepted.accepted' => 'Необходимо принять пользовательское соглашение',
         ];
     }
 }

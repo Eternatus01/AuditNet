@@ -21,6 +21,11 @@
           autocomplete="new-password"
           label="Пароль"
         />
+
+        <CheckboxField name="terms_accepted">
+          Я принимаю
+          <RouterLink :to="{ name: 'terms' }" target="_blank">пользовательское соглашение</RouterLink>
+        </CheckboxField>
       </div>
 
       <Button type="submit" variant="primary" size="lg" :loading="isLoading" full-width>
@@ -39,6 +44,7 @@ import { Form } from "vee-validate";
 import { useAuthStore } from "../stores/auth";
 import type { SignUpCredentials } from "../types";
 import InputField from "@/shared/ui/molecules/InputField.vue";
+import CheckboxField from "@/shared/ui/molecules/CheckboxField.vue";
 import { Button } from "@/shared/ui/atoms";
 import { useRouter } from "vue-router";
 import { registerSchema } from "@/shared/validation/schemas";

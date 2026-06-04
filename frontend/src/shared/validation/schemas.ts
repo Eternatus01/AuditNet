@@ -25,8 +25,26 @@ export const registerSchema = yup.object({
   name: nameSchema,
   email: emailSchema,
   password: passwordSchema,
+  terms_accepted: yup
+    .boolean()
+    .oneOf([true], "Необходимо принять пользовательское соглашение"),
+});
+
+export const forgotPasswordSchema = yup.object({
+  email: emailSchema,
+});
+
+export const resetPasswordSchema = yup.object({
+  email: emailSchema,
+  password: passwordSchema,
+  password_confirmation: yup
+    .string()
+    .required("Подтвердите пароль")
+    .oneOf([yup.ref("password")], "Пароли не совпадают"),
 });
 
 export type LoginFormData = yup.InferType<typeof loginSchema>;
 export type RegisterFormData = yup.InferType<typeof registerSchema>;
+export type ForgotPasswordFormData = yup.InferType<typeof forgotPasswordSchema>;
+export type ResetPasswordFormData = yup.InferType<typeof resetPasswordSchema>;
 

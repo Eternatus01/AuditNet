@@ -58,6 +58,16 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/features/profile/pages/Profile.vue"),
   },
   {
+    path: "/terms",
+    name: "terms",
+    component: () => import("@/features/auth/pages/Terms.vue"),
+  },
+  {
+    path: "/reset-password",
+    name: "reset-password",
+    component: () => import("@/features/auth/pages/ResetPassword.vue"),
+  },
+  {
     path: "/:pathMatch(.*)*",
     name: "not-found",
     component: () => import("@/features/error/pages/NotFound.vue"),
