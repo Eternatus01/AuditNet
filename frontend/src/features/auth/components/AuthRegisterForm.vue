@@ -1,6 +1,6 @@
 <template>
   <section class="auth-container">
-    <Form :validation-schema="registerSchema" class="auth-form" @submit="onSubmit">
+    <Form v-slot="{ values }" :validation-schema="registerSchema" class="auth-form" @submit="onSubmit">
       <h2>Регистрация</h2>
 
       <div class="form-fields">
@@ -28,7 +28,14 @@
         </CheckboxField>
       </div>
 
-      <Button type="submit" variant="primary" size="lg" :loading="isLoading" full-width>
+      <Button
+        type="submit"
+        variant="primary"
+        size="lg"
+        :loading="isLoading"
+        :disabled="!values.terms_accepted"
+        full-width
+      >
         Создать аккаунт
       </Button>
 
@@ -77,5 +84,9 @@ const onSubmit = async (values: unknown): Promise<void> => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.auth-form :deep(.btn) {
+  margin: 0;
 }
 </style>

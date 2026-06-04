@@ -3,7 +3,7 @@
   <div v-if="!isAuthenticated" class="auth-wrapper">
     <div class="auth-card">
       <div v-if="authMode === 'login'">
-        <Form :validation-schema="loginSchema" class="profile-form" @submit="onLogin">
+        <Form :validation-schema="loginSchema" class="profile-form profile-form--compact" @submit="onLogin">
           <h2>Вход в систему</h2>
 
           <div v-if="sessionExpiredMessage" class="warning-message">
@@ -33,7 +33,12 @@
       </div>
 
       <div v-else-if="authMode === 'register'">
-        <Form :validation-schema="registerSchema" class="profile-form" @submit="onRegister">
+        <Form
+          v-slot="{ values }"
+          :validation-schema="registerSchema"
+          class="profile-form profile-form--compact"
+          @submit="onRegister"
+        >
           <h2>Регистрация</h2>
 
           <div class="form-fields">
@@ -46,7 +51,14 @@
             </CheckboxField>
           </div>
 
-          <Button type="submit" variant="primary" size="lg" :loading="isLoading" full-width>
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            :loading="isLoading"
+            :disabled="!values.terms_accepted"
+            full-width
+          >
             Создать аккаунт
           </Button>
 
@@ -60,7 +72,11 @@
       </div>
 
       <div v-else>
-        <Form :validation-schema="forgotPasswordSchema" class="profile-form" @submit="onForgotPassword">
+        <Form
+          :validation-schema="forgotPasswordSchema"
+          class="profile-form profile-form--compact"
+          @submit="onForgotPassword"
+        >
           <h2>Восстановление пароля</h2>
           <p class="form-hint">Укажите email — мы отправим ссылку для сброса пароля.</p>
 
@@ -454,6 +470,15 @@ const avatarInitials = computed(() => {
   gap: 1.5rem;
 }
 
+.profile-form--compact {
+  gap: 0.75rem;
+}
+
+.profile-form--compact :deep(.btn),
+.profile-form--compact :deep(button[type="submit"]) {
+  margin: 0;
+}
+
 .form-fields {
   display: flex;
   flex-direction: column;
@@ -484,7 +509,7 @@ const avatarInitials = computed(() => {
 .forgot-row {
   display: flex;
   justify-content: flex-end;
-  margin: -0.25rem 0 0.75rem;
+  margin: 0;
 }
 
 .form-hint {

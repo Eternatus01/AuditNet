@@ -96,7 +96,11 @@ const onSubmit = async (values: unknown): Promise<void> => {
 .forgot-row {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 0.5rem;
+  margin: 0;
+}
+
+.auth-form :deep(.btn) {
+  margin: 0;
 }
 
 .forgot-link {
