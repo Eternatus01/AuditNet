@@ -33,14 +33,14 @@ return [
         'https://xn--80aidlz3acc.xn--p1ai',
         'http://xn--80aidlz3acc.xn--p1ai',
         'http://xn--80aidlz3acc.xn--p1ai:5173',
-        'http://138.16.177.238',
-        'http://138.16.177.238:5173',
+        'http://138.16.174.40',
+        'http://138.16.174.40:5173',
     ]))),
 
     'allowed_origins_patterns' => [
         '/\.onrender\.com$/',
         '/^https?:\/\/xn--80aidlz3acc\.xn--p1ai(:\d+)?$/',
-        '/^http:\/\/138\.16\.177\.238(:\d+)?$/',
+        '/^http:\/\/138\.16\.174\.40(:\d+)?$/',
     ],
 
     'allowed_headers' => ['*'],

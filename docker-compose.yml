@@ -10,7 +10,7 @@ services:
     environment:
       - APP_URL=https://xn--80aidlz3acc.xn--p1ai
       - FRONTEND_URL=https://xn--80aidlz3acc.xn--p1ai
-      - CORS_ALLOWED_ORIGINS=https://xn--80aidlz3acc.xn--p1ai,http://xn--80aidlz3acc.xn--p1ai,http://xn--80aidlz3acc.xn--p1ai:5173,http://138.16.177.238,http://138.16.177.238:5173,http://localhost:5173
+      - CORS_ALLOWED_ORIGINS=https://xn--80aidlz3acc.xn--p1ai,http://xn--80aidlz3acc.xn--p1ai,http://xn--80aidlz3acc.xn--p1ai:5173,http://138.16.174.40,http://138.16.174.40:5173,http://localhost:5173
       - SANCTUM_STATEFUL_DOMAINS=xn--80aidlz3acc.xn--p1ai,xn--80aidlz3acc.xn--p1ai:5173,аудитнет.рф,localhost,localhost:5173
       - DB_CONNECTION=mysql
       - DB_HOST=db
