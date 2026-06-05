@@ -24,6 +24,17 @@
 
     <template v-if="isAuthenticated">
       <SidebarNavItem
+        to="/sites"
+        label="Мои сайты"
+        aria-label="Мои сайты"
+        route-name="sites"
+      >
+        <template #icon>
+          <IconLucideMonitor />
+        </template>
+      </SidebarNavItem>
+
+      <SidebarNavItem
         to="/history"
         label="История"
         aria-label="История аудитов"
@@ -65,6 +76,7 @@ import IconLucideBarChart3 from "~icons/lucide/bar-chart-3";
 import IconLucideSwords from "~icons/lucide/swords";
 import IconLucideHistory from "~icons/lucide/history";
 import IconLucideTrendingUp from "~icons/lucide/trending-up";
+import IconLucideMonitor from "~icons/lucide/monitor";
 import IconLucideUser from "~icons/lucide/user";
 
 defineProps<{

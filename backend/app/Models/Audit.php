@@ -12,8 +12,10 @@ class Audit extends Model
 {
     protected $fillable = [
         'user_id',
+        'monitored_site_id',
         'url',
         'status',
+        'source',
         'performance',
         'accessibility',
         'best_practices',
@@ -47,6 +49,11 @@ class Audit extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function monitoredSite(): BelongsTo
+    {
+        return $this->belongsTo(MonitoredSite::class);
     }
 
     public function securityAudit(): HasOne

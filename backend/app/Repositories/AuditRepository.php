@@ -39,12 +39,14 @@ class AuditRepository
             ->paginate($perPage);
     }
 
-    public function createPendingAudit(string $url, int $userId): Audit
+    public function createPendingAudit(string $url, int $userId, ?int $monitoredSiteId = null, string $source = 'manual'): Audit
     {
         return Audit::create([
             'user_id' => $userId,
+            'monitored_site_id' => $monitoredSiteId,
             'url' => $url,
             'status' => AuditStatus::PENDING,
+            'source' => $source,
         ]);
     }
 

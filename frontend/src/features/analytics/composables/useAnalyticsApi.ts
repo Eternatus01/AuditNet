@@ -1,5 +1,10 @@
 import { apiClient } from "@/shared/utils/apiClient";
-import type { SiteAnalytics } from "../types";
+import type { AuditDiff } from "../types";
+
+interface AuditDiffResponse {
+  success: boolean;
+  data: AuditDiff;
+}
 
 interface HistoryAudit {
   id: number;
@@ -72,6 +77,7 @@ export const useAnalyticsApi = () => {
     }
 
     const data = filteredAudits.map(audit => ({
+      id: audit.id,
       date: audit.audited_at || audit.created_at,
       performance: audit.performance,
       accessibility: audit.accessibility,
@@ -93,8 +99,15 @@ export const useAnalyticsApi = () => {
         totalAudits: filteredAudits.length,
         firstAudit: firstAudit.audited_at || firstAudit.created_at,
         lastAudit: lastAudit.audited_at || lastAudit.created_at,
+        latestAuditId: lastAudit.id,
       },
     };
+  };
+
+  const getAuditDiff = async (auditId: number) => {
+    return apiClient<AuditDiffResponse>(`/audit/history/${auditId}/diff`, {
+      method: 'GET',
+    });
   };
 
   const getUniqueUrls = async () => {
@@ -146,5 +159,6 @@ export const useAnalyticsApi = () => {
   return {
     getAnalytics,
     getUniqueUrls,
+    getAuditDiff,
   };
 };

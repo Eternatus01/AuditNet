@@ -57,4 +57,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(AuditComparison::class);
     }
+
+    public function monitoredSites(): HasMany
+    {
+        return $this->hasMany(MonitoredSite::class);
+    }
 }

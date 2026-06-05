@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\AuditController;
 use App\Http\Controllers\Api\V1\ComparisonController;
 use App\Http\Controllers\Api\V1\SecurityController;
 use App\Http\Controllers\Api\V1\GuestAuditController;
+use App\Http\Controllers\Api\V1\SiteController;
 use App\Http\Resources\UserResource;
 
 
@@ -56,8 +57,17 @@ Route::prefix('audit')->middleware(['throttle:api', 'auth:sanctum'])->group(func
     Route::post('/security-audit', [SecurityController::class, 'analyze'])->middleware('prevent.ssrf');
     Route::get('/history', [AuditController::class, 'history']);
     Route::get('/history/{id}', [AuditController::class, 'show']);
+    Route::get('/history/{id}/diff', [AuditController::class, 'diff']);
     Route::post('/history/{id}/share', [AuditController::class, 'share']);
     Route::get('/status/{id}', [AuditController::class, 'status']);
+});
+
+Route::prefix('sites')->middleware(['throttle:api', 'auth:sanctum'])->group(function () {
+    Route::get('/', [SiteController::class, 'index']);
+    Route::post('/', [SiteController::class, 'store'])->middleware('prevent.ssrf');
+    Route::put('/{id}', [SiteController::class, 'update']);
+    Route::delete('/{id}', [SiteController::class, 'destroy']);
+    Route::post('/{id}/run', [SiteController::class, 'run']);
 });
 
 Route::prefix('comparisons')->middleware(['throttle:api', 'auth:sanctum'])->group(function () {

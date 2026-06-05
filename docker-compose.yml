@@ -26,6 +26,60 @@ services:
     networks:
       - default
 
+  # Queue worker (выполняет фоновые аудиты сайтов)
+  worker:
+    build: ./backend
+    container_name: auditnet_worker
+    restart: unless-stopped
+    volumes:
+      - ./backend:/var/www
+      - ./backend/storage:/var/www/storage
+    command: sh -c "php artisan queue:work --tries=3 --timeout=300 --sleep=3"
+    environment:
+      - APP_URL=https://xn--80aidlz3acc.xn--p1ai
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=auditnet_db
+      - DB_USERNAME=audituser
+      - DB_PASSWORD=secret_vps_password_2026
+      - QUEUE_CONNECTION=database
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
+      lighthouse:
+        condition: service_started
+    networks:
+      - default
+
+  # Планировщик (раз в минуту проверяет расписание и ставит аудиты в очередь)
+  scheduler:
+    build: ./backend
+    container_name: auditnet_scheduler
+    restart: unless-stopped
+    volumes:
+      - ./backend:/var/www
+      - ./backend/storage:/var/www/storage
+    command: sh -c "php artisan schedule:work"
+    environment:
+      - APP_URL=https://xn--80aidlz3acc.xn--p1ai
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=auditnet_db
+      - DB_USERNAME=audituser
+      - DB_PASSWORD=secret_vps_password_2026
+      - QUEUE_CONNECTION=database
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    networks:
+      - default
+
   # Vue Frontend
   frontend:
     build:

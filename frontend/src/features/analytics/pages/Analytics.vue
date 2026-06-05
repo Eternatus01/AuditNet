@@ -44,6 +44,8 @@
         :trend-text="trendText"
       />
 
+      <AuditChanges :diff="auditDiff" :is-loading="isLoadingDiff" />
+
       <div class="charts-grid">
         <MetricChart
           title="Основные показатели Lighthouse"
@@ -63,22 +65,27 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import { useAnalyticsApi } from '../composables/useAnalyticsApi';
-import type { SiteAnalytics } from '../types';
+import type { SiteAnalytics, AuditDiff } from '../types';
 import AnalyticsSitesList from '../components/AnalyticsSitesList.vue';
 import AnalyticsHeader from '../components/AnalyticsHeader.vue';
 import AnalyticsStats from '../components/AnalyticsStats.vue';
+import AuditChanges from '../components/AuditChanges.vue';
 import MetricChart from '../components/MetricChart.vue';
 import LoadingState from '@/shared/ui/molecules/LoadingState.vue';
 import { logger } from '@/shared/utils/logger';
 
+const route = useRoute();
 const analyticsApi = useAnalyticsApi();
 
 const selectedUrl = ref('');
 const availableUrls = ref<string[]>([]);
 const sitesMetadata = ref<Record<string, { count: number; lastAudit: string }>>({});
 const analytics = ref<SiteAnalytics | null>(null);
+const auditDiff = ref<AuditDiff | null>(null);
 const isLoading = ref(false);
+const isLoadingDiff = ref(false);
 const isLoadingUrls = ref(false);
 const error = ref<string | null>(null);
 
@@ -210,6 +217,7 @@ const loadAnalytics = async () => {
 
     if (response.success) {
       analytics.value = response.data;
+      loadAuditDiff(response.data.latestAuditId);
     } else {
       error.value = 'Не удалось загрузить данные аналитики';
     }
@@ -221,14 +229,34 @@ const loadAnalytics = async () => {
   }
 };
 
+const loadAuditDiff = async (auditId: number) => {
+  auditDiff.value = null;
+  isLoadingDiff.value = true;
+  try {
+    const response = await analyticsApi.getAuditDiff(auditId);
+    if (response.success) {
+      auditDiff.value = response.data;
+    }
+  } catch (err) {
+    logger.error('Ошибка загрузки изменений:', err);
+  } finally {
+    isLoadingDiff.value = false;
+  }
+};
+
 watch(selectedUrl, () => {
   if (selectedUrl.value) {
     loadAnalytics();
   }
 });
 
-onMounted(() => {
-  loadUrls();
+onMounted(async () => {
+  await loadUrls();
+
+  const urlFromQuery = route.query.url;
+  if (typeof urlFromQuery === 'string' && availableUrls.value.includes(urlFromQuery)) {
+    selectedUrl.value = urlFromQuery;
+  }
 });
 </script>
 

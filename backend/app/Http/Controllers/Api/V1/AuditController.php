@@ -8,10 +8,8 @@ use App\Http\Resources\AuditResource;
 use App\Http\Resources\AuditComparisonResource;
 use App\Http\Resources\PublicAuditResource;
 use App\Repositories\AuditRepository;
-use App\Services\Audit\AuditService;
-use App\Services\Audit\RecommendationParser;
-use App\Services\Security\SecurityAuditService;
-use App\Enums\AuditStatus;
+use App\Services\Audit\AuditRunnerService;
+use App\Services\Audit\AuditDiffService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -19,9 +17,8 @@ class AuditController extends BaseApiController
 {
     public function __construct(
         private AuditRepository $auditRepository,
-        private AuditService $auditService,
-        private SecurityAuditService $securityAuditService,
-        private RecommendationParser $recommendationParser
+        private AuditRunnerService $auditRunnerService,
+        private AuditDiffService $auditDiffService
     ) {}
 
     public function analyze(AuditRequest $request): JsonResponse
@@ -30,54 +27,8 @@ class AuditController extends BaseApiController
             $url = $request->input('url');
             $user = $this->requireAuthenticatedUser();
 
-            $audit = $this->auditRepository->createPendingAudit($url, $user->id);
-
             try {
-                $this->auditRepository->updateAuditStatus($audit->id, AuditStatus::PROCESSING);
-
-                $fullAudit = $this->auditService->performFullAudit($url);
-                $result = $fullAudit['result'];
-                $rawData = $fullAudit['rawData'];
-
-                $this->auditRepository->updateAuditWithResults($audit->id, [
-                    'performance' => $result->performance,
-                    'accessibility' => $result->accessibility,
-                    'bestPractices' => $result->bestPractices,
-                    'seo' => $result->seo,
-                    'lcp' => $result->lcp,
-                    'fid' => $result->fid,
-                    'cls' => $result->cls,
-                    'fcp' => $result->fcp,
-                    'tbt' => $result->tbt,
-                    'speedIndex' => $result->speedIndex,
-                ]);
-
-                try {
-                    $securityResult = $this->securityAuditService->auditWebsite($url);
-                    
-                    $audit->securityAudit()->create([
-                        'headers' => $securityResult->headers,
-                        'sensitive_files' => $securityResult->sensitiveFiles,
-                        'directory_listing' => $securityResult->directoryListing,
-                        'scripts_info' => $securityResult->scriptsInfo,
-                        'robots_txt' => $securityResult->robotsTxt,
-                        'sitemap_xml' => $securityResult->sitemapXml,
-                    ]);
-                } catch (\Exception $securityError) {
-                    // не блокируем основной аудит при сбое security-проверки
-                }
-
-                try {
-                    $recommendations = $this->recommendationParser->parse($rawData);
-                    
-                    foreach ($recommendations as $recommendation) {
-                        $audit->recommendations()->create($recommendation);
-                    }
-                } catch (\Exception $recommendationError) {
-                    // не блокируем основной аудит при сбое парсинга рекомендаций
-                }
-
-                $completedAudit = $this->auditRepository->findById($audit->id);
+                $completedAudit = $this->auditRunnerService->runForUrl($url, $user->id);
 
                 return $this->successResponse(
                     new AuditResource($completedAudit),
@@ -85,8 +36,6 @@ class AuditController extends BaseApiController
                 );
 
             } catch (\Exception $e) {
-                $this->auditRepository->markAuditAsFailed($audit->id, $e->getMessage());
-
                 $errorMessage = 'Ошибка при анализе';
                 if (str_contains($e->getMessage(), 'Lighthouse')) {
                     $errorMessage = 'Lighthouse сервис недоступен. Попробуйте через минуту (сервис "просыпается")';
@@ -99,6 +48,19 @@ class AuditController extends BaseApiController
 
         } catch (\Exception $e) {
             return $this->errorResponse('Ошибка при запуске анализа. Попробуйте позже.', 500);
+        }
+    }
+
+    public function diff(int $id): JsonResponse
+    {
+        try {
+            $user = $this->requireAuthenticatedUser();
+            $audit = $this->auditRepository->findByIdForUserOrFail($id, $user);
+
+            return $this->successResponse($this->auditDiffService->diff($audit));
+
+        } catch (\Exception $e) {
+            return $this->errorResponse('Аудит не найден.', 404);
         }
     }
 
