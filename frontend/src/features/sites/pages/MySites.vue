@@ -43,8 +43,8 @@
                   {{ hostOf(site.url) }}
                 </a>
               </div>
-              <button class="icon-btn danger" title="Удалить сайт" @click="handleDelete(site)">
-                <IconLucideTrash2 />
+              <button class="close-btn" title="Удалить сайт" @click="handleDelete(site)">
+                <IconLucideX />
               </button>
             </div>
 
@@ -112,10 +112,6 @@
                   <IconLucideLoader2 v-if="runningId === site.id" class="spinner" />
                   <IconLucidePlay v-else />
                   {{ runningId === site.id ? 'Запуск...' : 'Запустить' }}
-                </button>
-                <button class="action-btn danger" @click="handleDelete(site)">
-                  <IconLucideTrash2 />
-                  Удалить
                 </button>
               </div>
             </div>
@@ -209,7 +205,7 @@ import { WEEKDAYS, type MonitoredSite } from '../types';
 import LoadingState from '@/shared/ui/molecules/LoadingState.vue';
 import { logger } from '@/shared/utils/logger';
 import IconLucideMonitor from '~icons/lucide/monitor';
-import IconLucideTrash2 from '~icons/lucide/trash-2';
+import IconLucideX from '~icons/lucide/x';
 import IconLucideCalendarClock from '~icons/lucide/calendar-clock';
 import IconLucideClock from '~icons/lucide/clock';
 import IconLucideLink from '~icons/lucide/link';
@@ -666,30 +662,31 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.icon-btn {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.35);
+.close-btn {
+  background: transparent;
+  border: none;
   cursor: pointer;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #f87171;
+  color: rgba(255, 255, 255, 0.45);
   transition: all 0.2s ease;
   flex-shrink: 0;
+  padding: 0;
 }
 
-.icon-btn svg {
+.close-btn svg {
   width: 18px;
   height: 18px;
+  stroke-width: 2.5;
 }
 
-.icon-btn.danger:hover {
-  background: rgba(239, 68, 68, 0.25);
-  border-color: #ef4444;
-  color: #ef4444;
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .schedule-row {
@@ -928,18 +925,6 @@ onMounted(() => {
 .action-btn.primary:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(100, 108, 255, 0.45);
-}
-
-.action-btn.danger {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.35);
-}
-
-.action-btn.danger:hover {
-  background: rgba(239, 68, 68, 0.28);
-  color: #ef4444;
-  border-color: #ef4444;
 }
 
 .action-btn:disabled {
