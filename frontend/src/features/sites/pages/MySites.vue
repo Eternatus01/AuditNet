@@ -43,7 +43,7 @@
                   {{ hostOf(site.url) }}
                 </a>
               </div>
-              <button class="icon-btn danger" title="Удалить сайт" @click="handleDelete(site.id)">
+              <button class="icon-btn danger" title="Удалить сайт" @click="handleDelete(site)">
                 <IconLucideTrash2 />
               </button>
             </div>
@@ -112,6 +112,10 @@
                   <IconLucideLoader2 v-if="runningId === site.id" class="spinner" />
                   <IconLucidePlay v-else />
                   {{ runningId === site.id ? 'Запуск...' : 'Запустить' }}
+                </button>
+                <button class="action-btn danger" @click="handleDelete(site)">
+                  <IconLucideTrash2 />
+                  Удалить
                 </button>
               </div>
             </div>
@@ -346,11 +350,16 @@ const toggleActive = async (site: MonitoredSite) => {
   }
 };
 
-const handleDelete = async (id: number) => {
+const handleDelete = async (site: MonitoredSite) => {
+  const label = site.name || hostOf(site.url);
+  if (!window.confirm(`Удалить сайт «${label}» из мониторинга?`)) {
+    return;
+  }
+
   try {
-    const response = await sitesApi.deleteSite(id);
+    const response = await sitesApi.deleteSite(site.id);
     if (response.success) {
-      sites.value = sites.value.filter((s) => s.id !== id);
+      sites.value = sites.value.filter((s) => s.id !== site.id);
     }
   } catch (err) {
     logger.error('Ошибка удаления сайта:', err);
@@ -658,16 +667,16 @@ onMounted(() => {
 }
 
 .icon-btn {
-  background: transparent;
-  border: none;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
   cursor: pointer;
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.45);
+  color: #f87171;
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
@@ -678,7 +687,8 @@ onMounted(() => {
 }
 
 .icon-btn.danger:hover {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
   color: #ef4444;
 }
 
@@ -875,7 +885,9 @@ onMounted(() => {
 
 .card-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
+  justify-content: flex-end;
 }
 
 .action-btn {
@@ -916,6 +928,18 @@ onMounted(() => {
 .action-btn.primary:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(100, 108, 255, 0.45);
+}
+
+.action-btn.danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.action-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.28);
+  color: #ef4444;
+  border-color: #ef4444;
 }
 
 .action-btn:disabled {
