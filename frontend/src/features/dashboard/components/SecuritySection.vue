@@ -123,9 +123,15 @@
             <IconLucideFileText />
           </template>
           <CheckRow
-            v-for="(found, path) in securityAudit.sensitive_files"
+            v-if="leakedFiles.length === 0"
+            label="Проверка публичных файлов"
+            status="ok"
+            :details="`Проверено ${sensitiveFilesCount} опасных путей, публичных утечек не найдено.`"
+          />
+          <CheckRow
+            v-for="[path, found] in leakedFiles"
             :key="path"
-            :label="path.toString()"
+            :label="path"
             :status="found ? 'bad' : 'ok'"
             :details="found ? 'Файл доступен публично. Это может раскрыть секреты или исходный код.' : 'Не найден публично.'"
             :fix="found ? 'Закройте доступ к файлу на уровне nginx/apache и проверьте, не утекли ли ключи.' : undefined"
@@ -142,9 +148,15 @@
             <IconLucideFolder />
           </template>
           <CheckRow
-            v-for="(enabled, path) in securityAudit.directory_listing"
+            v-if="openDirectories.length === 0"
+            label="Проверка листинга директорий"
+            status="ok"
+            :details="`Проверено ${directoriesCount} директорий, публичный список файлов не найден.`"
+          />
+          <CheckRow
+            v-for="[path, enabled] in openDirectories"
             :key="path"
-            :label="path.toString()"
+            :label="path"
             :status="enabled ? 'bad' : 'ok'"
             :details="enabled ? 'Папка показывает список файлов.' : 'Список файлов не раскрывается.'"
             :fix="enabled ? 'Отключите autoindex/directory listing для этой директории.' : undefined"
@@ -319,6 +331,24 @@ const serverExposureDetails = computed(() => {
   return values ? `Раскрывается: ${values}` : exposure.issues.join(", ");
 });
 
+const leakedFiles = computed<[string, boolean][]>(() => {
+  const files = props.securityAudit?.sensitive_files || {};
+  return Object.entries(files).filter(([, found]) => found);
+});
+
+const sensitiveFilesCount = computed(() => {
+  return Object.keys(props.securityAudit?.sensitive_files || {}).length;
+});
+
+const openDirectories = computed<[string, boolean][]>(() => {
+  const directories = props.securityAudit?.directory_listing || {};
+  return Object.entries(directories).filter(([, enabled]) => enabled);
+});
+
+const directoriesCount = computed(() => {
+  return Object.keys(props.securityAudit?.directory_listing || {}).length;
+});
+
 const seoFilesDetails = computed(() => {
   const audit = props.securityAudit;
   const found = [
@@ -407,12 +437,14 @@ const seoFilesDetails = computed(() => {
 }
 
 .recommendation-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
   gap: 0.75rem;
   padding: 0.9rem 1rem;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  min-width: 0;
 }
 
 .recommendation-row svg {
@@ -423,13 +455,16 @@ const seoFilesDetails = computed(() => {
 }
 
 .recommendation-row strong {
+  display: block;
   color: #fff;
+  overflow-wrap: anywhere;
 }
 
 .recommendation-row p {
   color: rgba(255, 255, 255, 0.68);
   margin: 0.25rem 0 0;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .severity-critical,
@@ -450,22 +485,90 @@ const seoFilesDetails = computed(() => {
   color: #60a5fa;
 }
 
+:deep(.security-grid) {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
+
+:deep(.security-card) {
+  min-width: 0;
+  padding: 1.35rem;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+:deep(.security-card:hover) {
+  transform: translateY(-2px);
+}
+
+:deep(.security-items) {
+  gap: 0;
+  margin-top: 1rem;
+}
+
+:deep(.score-header) {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+:deep(.score-header h3) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 1.15rem;
+}
+
+:deep(.score-icon.security) {
+  width: 44px;
+  height: 44px;
+}
+
+:deep(.info-description) {
+  overflow-wrap: anywhere;
+}
+
 .practical-check {
-  padding: 0.85rem;
-  border-radius: 12px;
+  padding: 0.95rem;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.035);
   border: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 3px solid rgba(255, 255, 255, 0.1);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .practical-check + .practical-check {
-  margin-top: 0.65rem;
+  margin-top: 0.55rem;
+}
+
+.practical-check.check-ok {
+  border-left-color: #10b981;
+}
+
+.practical-check.check-warn {
+  border-left-color: #f59e0b;
+}
+
+.practical-check.check-bad {
+  border-left-color: #ef4444;
 }
 
 .check-main {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   gap: 0.75rem;
+  min-width: 0;
+}
+
+.security-item-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.35;
 }
 
 .status-pill {
@@ -498,16 +601,44 @@ const seoFilesDetails = computed(() => {
   color: rgba(255, 255, 255, 0.62);
   font-size: 0.86rem;
   line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .check-fix {
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.86);
+  background: rgba(100, 108, 255, 0.08);
+  border: 1px solid rgba(100, 108, 255, 0.12);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
 }
 
 @media (max-width: 768px) {
   .security-score-panel {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  :deep(.security-grid) {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  :deep(.security-card) {
+    padding: 1rem;
+  }
+
+  :deep(.score-header) {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+  }
+
+  .check-main {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .status-pill {
+    width: fit-content;
   }
 }
 </style>
