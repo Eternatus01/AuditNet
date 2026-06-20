@@ -82,9 +82,15 @@
             <IconLucideLock />
           </template>
           <CheckRow
-            v-for="(check, key) in securityAudit.header_analysis"
+            v-if="headerIssues.length === 0"
+            label="Security headers"
+            status="ok"
+            :details="`Проверено ${headersCount} важных заголовков, явных проблем не найдено.`"
+          />
+          <CheckRow
+            v-for="[key, check] in headerIssues"
             :key="key"
-            :label="formatHeaderName(key.toString())"
+            :label="formatHeaderName(key)"
             :status="check.status"
             :details="check.message"
             :fix="check.status !== 'ok' ? check.recommendation : undefined"
@@ -104,12 +110,18 @@
             Set-Cookie не найден. Если на сайте нет авторизации — это нормально.
           </div>
           <CheckRow
-            v-for="cookie in securityAudit.cookie_flags?.cookies || []"
+            v-else-if="weakCookies.length === 0"
+            label="Cookie-флаги"
+            status="ok"
+            :details="`Проверено cookies: ${securityAudit.cookie_flags?.total || 0}. Слабые флаги не найдены.`"
+          />
+          <CheckRow
+            v-for="cookie in weakCookies"
             :key="cookie.name"
             :label="cookie.name"
-            :status="cookie.issues.length ? 'bad' : 'ok'"
-            :details="cookie.issues.length ? cookie.issues.join(', ') : `Secure + HttpOnly + SameSite=${cookie.samesite}`"
-            :fix="cookie.issues.length ? 'Для сессионных cookies включите Secure, HttpOnly и SameSite=Lax/Strict.' : undefined"
+            status="bad"
+            :details="cookie.issues.join(', ')"
+            fix="Для сессионных cookies включите Secure, HttpOnly и SameSite=Lax/Strict."
           />
         </SecurityCard>
 
@@ -246,11 +258,16 @@ const CheckRow = defineComponent({
     return () =>
       h("div", { class: ["practical-check", `check-${rowProps.status}`] }, [
         h("div", { class: "check-main" }, [
-          h("span", { class: "security-item-name" }, rowProps.label),
+          h("span", { class: "check-title" }, rowProps.label),
           h("span", { class: ["status-pill", rowProps.status] }, statusLabel(rowProps.status)),
         ]),
         h("p", { class: "check-details" }, rowProps.details),
-        rowProps.fix ? h("p", { class: "check-fix" }, rowProps.fix) : null,
+        rowProps.fix
+          ? h("div", { class: "check-fix" }, [
+              h("span", { class: "fix-label" }, "Как исправить"),
+              h("span", rowProps.fix),
+            ])
+          : null,
       ]);
   },
 });
@@ -329,6 +346,21 @@ const serverExposureDetails = computed(() => {
   if (!exposure?.issues?.length) return "Server/X-Powered-By не раскрывают лишние детали.";
   const values = [exposure.server, exposure.x_powered_by].filter(Boolean).join(", ");
   return values ? `Раскрывается: ${values}` : exposure.issues.join(", ");
+});
+
+const headerIssues = computed(() => {
+  const headers = props.securityAudit?.header_analysis || {};
+  return Object.entries(headers).filter(([, check]) => check.status !== "ok");
+});
+
+const headersCount = computed(() => {
+  return Object.keys(props.securityAudit?.header_analysis || {}).length;
+});
+
+const weakCookies = computed(() => {
+  return (props.securityAudit?.cookie_flags?.cookies || []).filter(
+    (cookie) => cookie.issues.length > 0
+  );
 });
 
 const leakedFiles = computed<[string, boolean][]>(() => {
@@ -431,8 +463,8 @@ const seoFilesDetails = computed(() => {
 }
 
 .recommendations-panel {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
   gap: 0.75rem;
 }
 
@@ -486,15 +518,15 @@ const seoFilesDetails = computed(() => {
 }
 
 :deep(.security-grid) {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr));
+  grid-template-columns: 1fr;
   gap: 1.25rem;
   align-items: start;
 }
 
 :deep(.security-card) {
   min-width: 0;
-  padding: 1.35rem;
-  border-radius: 20px;
+  padding: 1.5rem;
+  border-radius: 22px;
   overflow: hidden;
 }
 
@@ -503,7 +535,9 @@ const seoFilesDetails = computed(() => {
 }
 
 :deep(.security-items) {
-  gap: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 0.75rem;
   margin-top: 1rem;
 }
 
@@ -531,17 +565,18 @@ const seoFilesDetails = computed(() => {
 }
 
 .practical-check {
-  padding: 0.95rem;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.035);
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-left: 3px solid rgba(255, 255, 255, 0.1);
   min-width: 0;
   overflow: hidden;
+  min-height: 100%;
 }
 
 .practical-check + .practical-check {
-  margin-top: 0.55rem;
+  margin-top: 0;
 }
 
 .practical-check.check-ok {
@@ -564,7 +599,10 @@ const seoFilesDetails = computed(() => {
   min-width: 0;
 }
 
-.security-item-name {
+.check-title {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
   min-width: 0;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -573,10 +611,11 @@ const seoFilesDetails = computed(() => {
 
 .status-pill {
   flex-shrink: 0;
-  padding: 0.2rem 0.55rem;
+  padding: 0.24rem 0.6rem;
   border-radius: 999px;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .status-pill.ok {
@@ -606,11 +645,22 @@ const seoFilesDetails = computed(() => {
 }
 
 .check-fix {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
   color: rgba(255, 255, 255, 0.86);
   background: rgba(100, 108, 255, 0.08);
   border: 1px solid rgba(100, 108, 255, 0.12);
   border-radius: 10px;
   padding: 0.65rem 0.75rem;
+}
+
+.fix-label {
+  color: #b9bdff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 @media (max-width: 768px) {
