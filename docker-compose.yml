@@ -6,7 +6,7 @@ services:
     volumes:
       - ./backend:/var/www
       - ./backend/storage:/var/www/storage
-    command: sh -c "until php artisan migrate --force; do echo 'Waiting for database...'; sleep 3; done; php artisan serve --host=0.0.0.0 --port=8000"
+    command: sh -c "composer install --no-dev --optimize-autoloader --no-interaction && until php artisan migrate --force; do echo 'Waiting for database...'; sleep 3; done; php artisan serve --host=0.0.0.0 --port=8000"
     environment:
       - APP_URL=https://xn--80aidlz3acc.xn--p1ai
       - FRONTEND_URL=https://xn--80aidlz3acc.xn--p1ai
@@ -34,7 +34,7 @@ services:
     volumes:
       - ./backend:/var/www
       - ./backend/storage:/var/www/storage
-    command: sh -c "php artisan queue:work --tries=3 --timeout=300 --sleep=3"
+    command: sh -c "composer install --no-dev --optimize-autoloader --no-interaction && php artisan queue:work --tries=3 --timeout=300 --sleep=3"
     environment:
       - APP_URL=https://xn--80aidlz3acc.xn--p1ai
       - DB_CONNECTION=mysql
@@ -62,7 +62,7 @@ services:
     volumes:
       - ./backend:/var/www
       - ./backend/storage:/var/www/storage
-    command: sh -c "php artisan schedule:work"
+    command: sh -c "composer install --no-dev --optimize-autoloader --no-interaction && php artisan schedule:work"
     environment:
       - APP_URL=https://xn--80aidlz3acc.xn--p1ai
       - DB_CONNECTION=mysql

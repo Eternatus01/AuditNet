@@ -35,6 +35,14 @@ class PublicAuditResource extends JsonResource
                     'scripts_info' => $this->securityAudit->scripts_info,
                     'robots_txt' => $this->securityAudit->robots_txt,
                     'sitemap_xml' => $this->securityAudit->sitemap_xml,
+                    'https' => $this->securityAudit->https ?? [],
+                    'header_analysis' => $this->securityAudit->header_analysis ?? [],
+                    'cookie_flags' => $this->securityAudit->cookie_flags ?? [],
+                    'mixed_content' => $this->securityAudit->mixed_content ?? [],
+                    'script_integrity' => $this->securityAudit->script_integrity ?? [],
+                    'server_exposure' => $this->securityAudit->server_exposure ?? [],
+                    'security_txt' => $this->securityAudit->security_txt ?? false,
+                    'security_recommendations' => $this->securityAudit->recommendations ?? [],
                 ] : null;
             }),
             'recommendations' => $this->recommendations->map(function ($rec) {

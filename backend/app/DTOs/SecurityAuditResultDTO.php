@@ -10,9 +10,17 @@ class SecurityAuditResultDTO
         public readonly array $headers,
         public readonly array $sensitiveFiles,
         public readonly array $directoryListing,
-        public readonly ?string $robotsTxt,
+        public readonly bool $robotsTxt,
         public readonly bool $sitemapXml,
         public readonly array $scriptsInfo,
+        public readonly array $https,
+        public readonly array $headerAnalysis,
+        public readonly array $cookieFlags,
+        public readonly array $mixedContent,
+        public readonly array $scriptIntegrity,
+        public readonly array $serverExposure,
+        public readonly bool $securityTxt,
+        public readonly array $recommendations,
     ) {}
 
     public function toArray(): array
@@ -26,6 +34,14 @@ class SecurityAuditResultDTO
             'robots_txt' => $this->robotsTxt,
             'sitemap_xml' => $this->sitemapXml,
             'scripts_info' => $this->scriptsInfo,
+            'https' => $this->https,
+            'header_analysis' => $this->headerAnalysis,
+            'cookie_flags' => $this->cookieFlags,
+            'mixed_content' => $this->mixedContent,
+            'script_integrity' => $this->scriptIntegrity,
+            'server_exposure' => $this->serverExposure,
+            'security_txt' => $this->securityTxt,
+            'recommendations' => $this->recommendations,
         ];
     }
 }

@@ -33,6 +33,10 @@ sleep 10
 echo "📦 Running migrations..."
 docker compose exec -T backend php artisan migrate --force
 
+# Устанавливаем PHP-зависимости (volume mount перезаписывает vendor из образа)
+echo "📦 Installing Composer dependencies..."
+docker compose exec -T backend composer install --no-dev --optimize-autoloader --no-interaction
+
 # Очищаем кеш
 echo "🧹 Clearing cache..."
 docker compose exec -T backend php artisan config:clear

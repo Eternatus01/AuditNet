@@ -37,6 +37,14 @@ class GuestAuditController extends BaseApiController
                     'scripts_info' => $securityResult->scriptsInfo,
                     'robots_txt' => $securityResult->robotsTxt,
                     'sitemap_xml' => $securityResult->sitemapXml,
+                        'https' => $securityResult->https,
+                        'header_analysis' => $securityResult->headerAnalysis,
+                        'cookie_flags' => $securityResult->cookieFlags,
+                        'mixed_content' => $securityResult->mixedContent,
+                        'script_integrity' => $securityResult->scriptIntegrity,
+                        'server_exposure' => $securityResult->serverExposure,
+                        'security_txt' => $securityResult->securityTxt,
+                        'security_recommendations' => $securityResult->recommendations,
                 ];
             } catch (\Exception) {
                 // не блокируем основной аудит при сбое security-проверки
@@ -97,6 +105,14 @@ class GuestAuditController extends BaseApiController
                 'robots_txt' => (bool) $result->robotsTxt,
                 'sitemap_xml' => (bool) $result->sitemapXml,
                 'scripts_info' => $result->scriptsInfo,
+                'https' => $result->https,
+                'header_analysis' => $result->headerAnalysis,
+                'cookie_flags' => $result->cookieFlags,
+                'mixed_content' => $result->mixedContent,
+                'script_integrity' => $result->scriptIntegrity,
+                'server_exposure' => $result->serverExposure,
+                'security_txt' => $result->securityTxt,
+                'security_recommendations' => $result->recommendations,
             ]);
 
         } catch (\Exception $e) {

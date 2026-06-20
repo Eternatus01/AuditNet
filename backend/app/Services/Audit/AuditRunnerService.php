@@ -50,6 +50,14 @@ class AuditRunnerService
                     'scripts_info' => $securityResult->scriptsInfo,
                     'robots_txt' => $securityResult->robotsTxt,
                     'sitemap_xml' => $securityResult->sitemapXml,
+                    'https' => $securityResult->https,
+                    'header_analysis' => $securityResult->headerAnalysis,
+                    'cookie_flags' => $securityResult->cookieFlags,
+                    'mixed_content' => $securityResult->mixedContent,
+                    'script_integrity' => $securityResult->scriptIntegrity,
+                    'server_exposure' => $securityResult->serverExposure,
+                    'security_txt' => $securityResult->securityTxt,
+                    'recommendations' => $securityResult->recommendations,
                 ]);
             } catch (\Exception $securityError) {
                 // не блокируем основной аудит при сбое security-проверки

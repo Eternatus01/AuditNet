@@ -2,14 +2,14 @@
   <div class="metrics-section dashboard-results" :class="{ hidden: !isSecurityReady }">
     <h2 class="section-title">Проверка безопасности</h2>
     <p class="section-subtitle">
-      Анализ HTTP заголовков, чувствительных файлов и настроек безопасности
+      Практический чеклист: HTTPS, качество заголовков, cookies, утечки файлов и внешние ресурсы.
     </p>
 
     <div class="info-notice security-notice">
       <IconLucideAlertCircle class="notice-icon" />
       <div class="notice-content">
-        <strong>Обратите внимание:</strong> Некоторые данные могут быть недоступны из-за настроек безопасности сайта 
-        (CORS, блокировка headless браузеров, защита от ботов). Отсутствие информации не всегда означает проблему.
+        <strong>Обратите внимание:</strong> это быстрый HTTP-аудит, а не pentest. Он показывает
+        реальные настройки, которые разработчик может проверить и исправить сразу.
       </div>
     </div>
 
@@ -17,135 +17,199 @@
       {{ securityError }}
     </div>
 
-    <div v-if="securityAudit" class="security-grid">
-      <SecurityCard
-        title="Security Headers"
-        :description="descriptions.security.headers"
-        :is-expanded="isExpanded('headers')"
-        @toggle-info="onToggle('headers')"
-      >
-        <template #icon>
-          <IconLucideLock />
-        </template>
-        <div v-for="(v, k) in securityAudit.headers" :key="k" class="security-item">
-          <span class="security-item-name">{{ formatHeaderName(k.toString()) }}</span>
-          <span
-            :class="v && v !== false ? 'security-badge ok' : 'security-badge bad'"
-            :aria-label="v && v !== false ? 'Присутствует' : 'Отсутствует'"
-          >
-            <IconLucideCheck v-if="v && v !== false" />
-            <IconLucideX v-else />
-          </span>
+    <template v-if="securityAudit">
+      <div class="security-score-panel" :class="overallClass">
+        <div>
+          <span class="score-eyebrow">Итог по безопасности</span>
+          <h3>{{ overallTitle }}</h3>
+          <p>{{ overallSubtitle }}</p>
         </div>
-      </SecurityCard>
+        <div class="risk-count">
+          <span>{{ priorityRecommendations.length }}</span>
+          <small>важных пункта</small>
+        </div>
+      </div>
 
-      <SecurityCard
-        title="Чувствительные файлы"
-        :description="descriptions.security.sensitiveFiles"
-        :is-expanded="isExpanded('files')"
-        @toggle-info="onToggle('files')"
-      >
-        <template #icon>
-          <IconLucideFileText />
-        </template>
-        <div v-for="(v, k) in securityAudit.sensitive_files" :key="k" class="security-item">
-          <span class="security-item-name">{{ k }}</span>
-          <span
-            :class="v ? 'security-badge bad' : 'security-badge ok'"
-            :aria-label="v ? 'Найден (опасно)' : 'Не найден'"
-          >
-            <IconLucideAlertTriangle v-if="v" />
-            <IconLucideCheck v-else />
-          </span>
+      <div v-if="priorityRecommendations.length" class="recommendations-panel">
+        <div
+          v-for="item in priorityRecommendations"
+          :key="`${item.severity}-${item.title}`"
+          class="recommendation-row"
+          :class="`severity-${item.severity}`"
+        >
+          <IconLucideAlertTriangle />
+          <div>
+            <strong>{{ item.title }}</strong>
+            <p>{{ item.fix }}</p>
+          </div>
         </div>
-      </SecurityCard>
+      </div>
 
-      <SecurityCard
-        title="Directory Listing"
-        :description="descriptions.security.directoryListing"
-        :is-expanded="isExpanded('listing')"
-        @toggle-info="onToggle('listing')"
-      >
-        <template #icon>
-          <IconLucideFolder />
-        </template>
-        <div v-for="(v, k) in securityAudit.directory_listing" :key="k" class="security-item">
-          <span class="security-item-name">{{ k }}</span>
-          <span
-            :class="v ? 'security-badge bad' : 'security-badge ok'"
-            :aria-label="v ? 'Включен (опасно)' : 'Выключен'"
-          >
-            <IconLucideAlertTriangle v-if="v" />
-            <IconLucideCheck v-else />
-          </span>
-        </div>
-      </SecurityCard>
+      <div class="security-grid">
+        <SecurityCard
+          title="HTTPS и транспорт"
+          description="Проверяет, доступен ли сайт по HTTPS, перенаправляет ли HTTP на HTTPS и нет ли небезопасных http:// ресурсов на странице."
+          :is-expanded="isExpanded('transport')"
+          @toggle-info="onToggle('transport')"
+        >
+          <template #icon>
+            <IconLucideShieldCheck />
+          </template>
+          <CheckRow
+            label="Сайт открыт по HTTPS"
+            :status="securityAudit.https?.uses_https ? 'ok' : 'bad'"
+            :details="securityAudit.https?.uses_https ? 'Соединение шифруется.' : 'Откройте сайт по HTTPS и настройте TLS-сертификат.'"
+          />
+          <CheckRow
+            label="HTTP → HTTPS redirect"
+            :status="redirectStatus"
+            :details="redirectDetails"
+          />
+          <CheckRow
+            label="Mixed content"
+            :status="(securityAudit.mixed_content?.count || 0) > 0 ? 'bad' : 'ok'"
+            :details="mixedContentDetails"
+          />
+        </SecurityCard>
 
-      <SecurityCard
-        title="Дополнительно"
-        :description="descriptions.security.additional"
-        :is-expanded="isExpanded('additional')"
-        @toggle-info="onToggle('additional')"
-      >
-        <template #icon>
-          <IconLucideGlobe />
-        </template>
-        <div class="security-item">
-          <span class="security-item-name">robots.txt</span>
-          <span
-            :class="securityAudit.robots_txt ? 'security-badge ok' : 'security-badge warn'"
-            :aria-label="securityAudit.robots_txt ? 'Найден' : 'Не найден'"
-          >
-            <IconLucideCheck v-if="securityAudit.robots_txt" />
-            <IconLucideMinus v-else />
-          </span>
-        </div>
-        <div class="security-item">
-          <span class="security-item-name">sitemap.xml</span>
-          <span
-            :class="securityAudit.sitemap_xml ? 'security-badge ok' : 'security-badge warn'"
-            :aria-label="securityAudit.sitemap_xml ? 'Найден' : 'Не найден'"
-          >
-            <IconLucideCheck v-if="securityAudit.sitemap_xml" />
-            <IconLucideMinus v-else />
-          </span>
-        </div>
-        <div class="security-item">
-          <span class="security-item-name">Внешние JS</span>
-          <span
-            :class="
-              securityAudit.scripts_info?.length > 0 ? 'security-badge warn' : 'security-badge ok'
-            "
-          >
-            {{ securityAudit.scripts_info?.length || 0 }}
-          </span>
-        </div>
-      </SecurityCard>
-    </div>
+        <SecurityCard
+          title="Качество заголовков"
+          :description="descriptions.security.headers"
+          :is-expanded="isExpanded('headers')"
+          @toggle-info="onToggle('headers')"
+        >
+          <template #icon>
+            <IconLucideLock />
+          </template>
+          <CheckRow
+            v-for="(check, key) in securityAudit.header_analysis"
+            :key="key"
+            :label="formatHeaderName(key.toString())"
+            :status="check.status"
+            :details="check.message"
+            :fix="check.status !== 'ok' ? check.recommendation : undefined"
+          />
+        </SecurityCard>
+
+        <SecurityCard
+          title="Cookies сессии"
+          description="Проверяет Set-Cookie: Secure, HttpOnly и SameSite. Эти флаги снижают риск кражи сессий через XSS и небезопасные соединения."
+          :is-expanded="isExpanded('cookies')"
+          @toggle-info="onToggle('cookies')"
+        >
+          <template #icon>
+            <IconLucideCookie />
+          </template>
+          <div v-if="!securityAudit.cookie_flags?.total" class="empty-check">
+            Set-Cookie не найден. Если на сайте нет авторизации — это нормально.
+          </div>
+          <CheckRow
+            v-for="cookie in securityAudit.cookie_flags?.cookies || []"
+            :key="cookie.name"
+            :label="cookie.name"
+            :status="cookie.issues.length ? 'bad' : 'ok'"
+            :details="cookie.issues.length ? cookie.issues.join(', ') : `Secure + HttpOnly + SameSite=${cookie.samesite}`"
+            :fix="cookie.issues.length ? 'Для сессионных cookies включите Secure, HttpOnly и SameSite=Lax/Strict.' : undefined"
+          />
+        </SecurityCard>
+
+        <SecurityCard
+          title="Утечки файлов"
+          :description="descriptions.security.sensitiveFiles"
+          :is-expanded="isExpanded('files')"
+          @toggle-info="onToggle('files')"
+        >
+          <template #icon>
+            <IconLucideFileText />
+          </template>
+          <CheckRow
+            v-for="(found, path) in securityAudit.sensitive_files"
+            :key="path"
+            :label="path.toString()"
+            :status="found ? 'bad' : 'ok'"
+            :details="found ? 'Файл доступен публично. Это может раскрыть секреты или исходный код.' : 'Не найден публично.'"
+            :fix="found ? 'Закройте доступ к файлу на уровне nginx/apache и проверьте, не утекли ли ключи.' : undefined"
+          />
+        </SecurityCard>
+
+        <SecurityCard
+          title="Directory Listing"
+          :description="descriptions.security.directoryListing"
+          :is-expanded="isExpanded('listing')"
+          @toggle-info="onToggle('listing')"
+        >
+          <template #icon>
+            <IconLucideFolder />
+          </template>
+          <CheckRow
+            v-for="(enabled, path) in securityAudit.directory_listing"
+            :key="path"
+            :label="path.toString()"
+            :status="enabled ? 'bad' : 'ok'"
+            :details="enabled ? 'Папка показывает список файлов.' : 'Список файлов не раскрывается.'"
+            :fix="enabled ? 'Отключите autoindex/directory listing для этой директории.' : undefined"
+          />
+        </SecurityCard>
+
+        <SecurityCard
+          title="Внешние ресурсы"
+          description="Проверяет внешние JS, SRI, security.txt и раскрытие Server/X-Powered-By."
+          :is-expanded="isExpanded('resources')"
+          @toggle-info="onToggle('resources')"
+        >
+          <template #icon>
+            <IconLucideCode2 />
+          </template>
+          <CheckRow
+            label="Внешние JS без SRI"
+            :status="(securityAudit.script_integrity?.without_integrity_count || 0) > 0 ? 'warn' : 'ok'"
+            :details="scriptIntegrityDetails"
+            :fix="(securityAudit.script_integrity?.without_integrity_count || 0) > 0 ? 'Добавьте integrity и crossorigin для CDN-скриптов.' : undefined"
+          />
+          <CheckRow
+            label="Раскрытие сервера"
+            :status="securityAudit.server_exposure?.issues?.length ? 'warn' : 'ok'"
+            :details="serverExposureDetails"
+            :fix="securityAudit.server_exposure?.issues?.length ? 'Скройте X-Powered-By и минимизируйте Server в конфигурации web-сервера.' : undefined"
+          />
+          <CheckRow
+            label="security.txt"
+            :status="securityAudit.security_txt ? 'ok' : 'warn'"
+            :details="securityAudit.security_txt ? 'Файл найден.' : 'Файл не найден. Это не ошибка, но полезно для зрелого процесса безопасности.'"
+            fix="Добавьте /.well-known/security.txt с контактом для сообщений об уязвимостях."
+          />
+          <CheckRow
+            label="robots.txt / sitemap.xml"
+            :status="securityAudit.robots_txt && securityAudit.sitemap_xml ? 'ok' : 'warn'"
+            :details="seoFilesDetails"
+          />
+        </SecurityCard>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed, defineComponent, h, PropType } from "vue";
 import SecurityCard from "./SecurityCard.vue";
 import { formatHeaderName } from "@/shared/utils/security";
 import IconLucideLock from "~icons/lucide/lock";
 import IconLucideFileText from "~icons/lucide/file-text";
 import IconLucideFolder from "~icons/lucide/folder";
-import IconLucideGlobe from "~icons/lucide/globe";
-import IconLucideCheck from "~icons/lucide/check";
-import IconLucideX from "~icons/lucide/x";
 import IconLucideAlertTriangle from "~icons/lucide/alert-triangle";
-import IconLucideMinus from "~icons/lucide/minus";
 import IconLucideAlertCircle from "~icons/lucide/alert-circle";
+import IconLucideShieldCheck from "~icons/lucide/shield-check";
+import IconLucideCookie from "~icons/lucide/cookie";
+import IconLucideCode2 from "~icons/lucide/code-2";
 
-import type { SecurityAudit, AuditDescriptions } from "../types";
+import type { SecurityAudit, AuditDescriptions, SecurityRecommendation } from "../types";
 
-defineProps<{
+const props = defineProps<{
   securityAudit: SecurityAudit | null;
   securityError: string;
   isSecurityReady: boolean;
   descriptions: AuditDescriptions;
-  isExpanded: (key: string) => boolean;
+  isExpanded: (_key: string) => boolean;
 }>();
 
 const emit = defineEmits<{
@@ -155,4 +219,295 @@ const emit = defineEmits<{
 const onToggle = (_key: string) => {
   emit("toggle", _key);
 };
+
+type CheckStatus = "ok" | "warn" | "bad";
+
+const CheckRow = defineComponent({
+  name: "CheckRow",
+  props: {
+    label: { type: String, required: true },
+    status: { type: String as PropType<CheckStatus>, required: true },
+    details: { type: String, required: true },
+    fix: { type: String, required: false },
+  },
+  setup(rowProps) {
+    return () =>
+      h("div", { class: ["practical-check", `check-${rowProps.status}`] }, [
+        h("div", { class: "check-main" }, [
+          h("span", { class: "security-item-name" }, rowProps.label),
+          h("span", { class: ["status-pill", rowProps.status] }, statusLabel(rowProps.status)),
+        ]),
+        h("p", { class: "check-details" }, rowProps.details),
+        rowProps.fix ? h("p", { class: "check-fix" }, rowProps.fix) : null,
+      ]);
+  },
+});
+
+const statusLabel = (status: CheckStatus) => {
+  if (status === "ok") return "OK";
+  if (status === "warn") return "Внимание";
+  return "Исправить";
+};
+
+const priorityRecommendations = computed<SecurityRecommendation[]>(() => {
+  const items = props.securityAudit?.security_recommendations || [];
+  const weight: Record<SecurityRecommendation["severity"], number> = {
+    critical: 0,
+    high: 1,
+    medium: 2,
+    low: 3,
+  };
+  return [...items].sort((a, b) => weight[a.severity] - weight[b.severity]).slice(0, 6);
+});
+
+const overallClass = computed(() => {
+  const hasCritical = priorityRecommendations.value.some((item) => item.severity === "critical");
+  const hasHigh = priorityRecommendations.value.some((item) => item.severity === "high");
+  if (hasCritical || hasHigh) return "risk-high";
+  if (priorityRecommendations.value.length > 0) return "risk-medium";
+  return "risk-low";
+});
+
+const overallTitle = computed(() => {
+  if (overallClass.value === "risk-high") return "Есть важные риски";
+  if (overallClass.value === "risk-medium") return "Есть улучшения";
+  return "Критичных проблем не найдено";
+});
+
+const overallSubtitle = computed(() => {
+  if (overallClass.value === "risk-high") {
+    return "Сначала исправьте пункты с высоким и критическим приоритетом.";
+  }
+  if (overallClass.value === "risk-medium") {
+    return "Критичных находок нет, но есть настройки, которые стоит усилить.";
+  }
+  return "Базовые настройки выглядят хорошо. Проверьте рекомендации ниже для полноты.";
+});
+
+const redirectStatus = computed<CheckStatus>(() => {
+  const value = props.securityAudit?.https?.http_to_https_redirect;
+  if (value === true) return "ok";
+  if (value === null || value === undefined) return "warn";
+  return "bad";
+});
+
+const redirectDetails = computed(() => {
+  const https = props.securityAudit?.https;
+  if (https?.http_to_https_redirect === true) return "HTTP-версия перенаправляет на HTTPS.";
+  if (https?.http_to_https_redirect === false) return `HTTP ответил статусом ${https.http_status || "без редиректа"}.`;
+  return "Не удалось проверить HTTP-редирект.";
+});
+
+const mixedContentDetails = computed(() => {
+  const mixed = props.securityAudit?.mixed_content;
+  if (!mixed?.checked) return "Проверяется только для HTTPS-страниц.";
+  if (!mixed.count) return "Небезопасные http:// ресурсы не найдены.";
+  return `Найдено http:// ресурсов: ${mixed.count}. Пример: ${mixed.examples?.[0] || "ресурс не указан"}`;
+});
+
+const scriptIntegrityDetails = computed(() => {
+  const sri = props.securityAudit?.script_integrity;
+  if (!sri?.external_count) return "Внешние JS-скрипты не найдены.";
+  if (!sri.without_integrity_count) return "У внешних JS есть integrity.";
+  return `Без integrity: ${sri.without_integrity_count} из ${sri.external_count}.`;
+});
+
+const serverExposureDetails = computed(() => {
+  const exposure = props.securityAudit?.server_exposure;
+  if (!exposure?.issues?.length) return "Server/X-Powered-By не раскрывают лишние детали.";
+  const values = [exposure.server, exposure.x_powered_by].filter(Boolean).join(", ");
+  return values ? `Раскрывается: ${values}` : exposure.issues.join(", ");
+});
+
+const seoFilesDetails = computed(() => {
+  const audit = props.securityAudit;
+  const found = [
+    audit?.robots_txt ? "robots.txt" : null,
+    audit?.sitemap_xml ? "sitemap.xml" : null,
+  ].filter(Boolean);
+  return found.length === 2 ? "Оба файла найдены." : `Найдено: ${found.join(", ") || "ничего"}.`;
+});
 </script>
+
+<style scoped>
+.security-score-panel,
+.recommendations-panel {
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(30, 30, 50, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.security-score-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.security-score-panel.risk-high {
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.security-score-panel.risk-medium {
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.security-score-panel.risk-low {
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.score-eyebrow {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.security-score-panel h3 {
+  color: #fff;
+  font-size: 1.5rem;
+  margin: 0.25rem 0;
+}
+
+.security-score-panel p {
+  color: rgba(255, 255, 255, 0.68);
+  margin: 0;
+}
+
+.risk-count {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: rgba(100, 108, 255, 0.14);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.risk-count span {
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.risk-count small {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.recommendations-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.recommendation-row {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.recommendation-row svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.recommendation-row strong {
+  color: #fff;
+}
+
+.recommendation-row p {
+  color: rgba(255, 255, 255, 0.68);
+  margin: 0.25rem 0 0;
+  line-height: 1.45;
+}
+
+.severity-critical,
+.severity-high {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.severity-critical svg,
+.severity-high svg {
+  color: #ef4444;
+}
+
+.severity-medium svg {
+  color: #f59e0b;
+}
+
+.severity-low svg {
+  color: #60a5fa;
+}
+
+.practical-check {
+  padding: 0.85rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.practical-check + .practical-check {
+  margin-top: 0.65rem;
+}
+
+.check-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.status-pill {
+  flex-shrink: 0;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.status-pill.ok {
+  background: rgba(16, 185, 129, 0.14);
+  color: #10b981;
+}
+
+.status-pill.warn {
+  background: rgba(245, 158, 11, 0.14);
+  color: #f59e0b;
+}
+
+.status-pill.bad {
+  background: rgba(239, 68, 68, 0.14);
+  color: #ef4444;
+}
+
+.check-details,
+.check-fix,
+.empty-check {
+  margin: 0.45rem 0 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.check-fix {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+@media (max-width: 768px) {
+  .security-score-panel {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+</style>

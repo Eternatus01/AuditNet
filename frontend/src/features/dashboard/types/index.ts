@@ -80,8 +80,31 @@ export interface DirectoryListing {
 
 export interface ScriptInfo {
   src: string;
+  external?: boolean;
+  integrity?: boolean;
   async?: boolean;
   defer?: boolean;
+}
+
+export interface SecurityCheckResult {
+  status: 'ok' | 'warn' | 'bad';
+  value: string | null;
+  message: string;
+  recommendation: string;
+}
+
+export interface CookieFlagInfo {
+  name: string;
+  secure: boolean;
+  httponly: boolean;
+  samesite: string | null;
+  issues: string[];
+}
+
+export interface SecurityRecommendation {
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  title: string;
+  fix: string;
 }
 
 export interface SecurityAudit {
@@ -90,9 +113,38 @@ export interface SecurityAudit {
   headers: SecurityHeaders;
   sensitive_files: SensitiveFiles;
   directory_listing: DirectoryListing;
-  robots_txt: string | null;
+  robots_txt: boolean;
   sitemap_xml: boolean;
-  scripts_info: string[];
+  scripts_info: ScriptInfo[];
+  https?: {
+    uses_https: boolean;
+    http_to_https_redirect: boolean | null;
+    http_status: number | null;
+    redirect_location: string | null;
+  };
+  header_analysis?: Record<string, SecurityCheckResult>;
+  cookie_flags?: {
+    cookies: CookieFlagInfo[];
+    total: number;
+    weak: number;
+  };
+  mixed_content?: {
+    checked: boolean;
+    count: number;
+    examples: string[];
+  };
+  script_integrity?: {
+    external_count: number;
+    without_integrity_count: number;
+    examples: string[];
+  };
+  server_exposure?: {
+    server: string | null;
+    x_powered_by: string | null;
+    issues: string[];
+  };
+  security_txt?: boolean;
+  security_recommendations?: SecurityRecommendation[];
 }
 
 export interface GuestAuditResponse {
