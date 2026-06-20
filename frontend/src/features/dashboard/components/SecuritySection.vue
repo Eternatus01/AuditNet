@@ -45,177 +45,67 @@
         </div>
       </div>
 
-      <div class="security-grid">
-        <SecurityCard
-          title="HTTPS и транспорт"
-          description="Проверяет, доступен ли сайт по HTTPS, перенаправляет ли HTTP на HTTPS и нет ли небезопасных http:// ресурсов на странице."
-          :is-expanded="isExpanded('transport')"
-          @toggle-info="onToggle('transport')"
+      <div class="security-board">
+        <article
+          v-for="category in securityCategories"
+          :key="category.key"
+          class="security-panel"
+          :class="`panel-${category.status}`"
         >
-          <template #icon>
-            <IconLucideShieldCheck />
-          </template>
-          <CheckRow
-            label="Сайт открыт по HTTPS"
-            :status="securityAudit.https?.uses_https ? 'ok' : 'bad'"
-            :details="securityAudit.https?.uses_https ? 'Соединение шифруется.' : 'Откройте сайт по HTTPS и настройте TLS-сертификат.'"
-          />
-          <CheckRow
-            label="HTTP → HTTPS redirect"
-            :status="redirectStatus"
-            :details="redirectDetails"
-          />
-          <CheckRow
-            label="Mixed content"
-            :status="(securityAudit.mixed_content?.count || 0) > 0 ? 'bad' : 'ok'"
-            :details="mixedContentDetails"
-          />
-        </SecurityCard>
-
-        <SecurityCard
-          title="Качество заголовков"
-          :description="descriptions.security.headers"
-          :is-expanded="isExpanded('headers')"
-          @toggle-info="onToggle('headers')"
-        >
-          <template #icon>
-            <IconLucideLock />
-          </template>
-          <CheckRow
-            v-if="headerIssues.length === 0"
-            label="Security headers"
-            status="ok"
-            :details="`Проверено ${headersCount} важных заголовков, явных проблем не найдено.`"
-          />
-          <CheckRow
-            v-for="[key, check] in headerIssues"
-            :key="key"
-            :label="formatHeaderName(key)"
-            :status="check.status"
-            :details="check.message"
-            :fix="check.status !== 'ok' ? check.recommendation : undefined"
-          />
-        </SecurityCard>
-
-        <SecurityCard
-          title="Cookies сессии"
-          description="Проверяет Set-Cookie: Secure, HttpOnly и SameSite. Эти флаги снижают риск кражи сессий через XSS и небезопасные соединения."
-          :is-expanded="isExpanded('cookies')"
-          @toggle-info="onToggle('cookies')"
-        >
-          <template #icon>
-            <IconLucideCookie />
-          </template>
-          <div v-if="!securityAudit.cookie_flags?.total" class="empty-check">
-            Set-Cookie не найден. Если на сайте нет авторизации — это нормально.
+          <div class="panel-header">
+            <div class="panel-icon">
+              <IconLucideShieldCheck v-if="category.key === 'transport'" />
+              <IconLucideLock v-else-if="category.key === 'headers'" />
+              <IconLucideCookie v-else-if="category.key === 'cookies'" />
+              <IconLucideFileText v-else-if="category.key === 'files'" />
+              <IconLucideFolder v-else-if="category.key === 'listing'" />
+              <IconLucideCode2 v-else />
+            </div>
+            <div class="panel-title">
+              <h3>{{ category.title }}</h3>
+              <p>{{ category.summary }}</p>
+            </div>
+            <span class="panel-status" :class="category.status">
+              {{ statusLabel(category.status) }}
+            </span>
           </div>
-          <CheckRow
-            v-else-if="weakCookies.length === 0"
-            label="Cookie-флаги"
-            status="ok"
-            :details="`Проверено cookies: ${securityAudit.cookie_flags?.total || 0}. Слабые флаги не найдены.`"
-          />
-          <CheckRow
-            v-for="cookie in weakCookies"
-            :key="cookie.name"
-            :label="cookie.name"
-            status="bad"
-            :details="cookie.issues.join(', ')"
-            fix="Для сессионных cookies включите Secure, HttpOnly и SameSite=Lax/Strict."
-          />
-        </SecurityCard>
 
-        <SecurityCard
-          title="Утечки файлов"
-          :description="descriptions.security.sensitiveFiles"
-          :is-expanded="isExpanded('files')"
-          @toggle-info="onToggle('files')"
-        >
-          <template #icon>
-            <IconLucideFileText />
-          </template>
-          <CheckRow
-            v-if="leakedFiles.length === 0"
-            label="Проверка публичных файлов"
-            status="ok"
-            :details="`Проверено ${sensitiveFilesCount} опасных путей, публичных утечек не найдено.`"
-          />
-          <CheckRow
-            v-for="[path, found] in leakedFiles"
-            :key="path"
-            :label="path"
-            :status="found ? 'bad' : 'ok'"
-            :details="found ? 'Файл доступен публично. Это может раскрыть секреты или исходный код.' : 'Не найден публично.'"
-            :fix="found ? 'Закройте доступ к файлу на уровне nginx/apache и проверьте, не утекли ли ключи.' : undefined"
-          />
-        </SecurityCard>
+          <div v-if="category.meta.length" class="panel-meta">
+            <span v-for="meta in category.meta" :key="meta">{{ meta }}</span>
+          </div>
 
-        <SecurityCard
-          title="Directory Listing"
-          :description="descriptions.security.directoryListing"
-          :is-expanded="isExpanded('listing')"
-          @toggle-info="onToggle('listing')"
-        >
-          <template #icon>
-            <IconLucideFolder />
-          </template>
-          <CheckRow
-            v-if="openDirectories.length === 0"
-            label="Проверка листинга директорий"
-            status="ok"
-            :details="`Проверено ${directoriesCount} директорий, публичный список файлов не найден.`"
-          />
-          <CheckRow
-            v-for="[path, enabled] in openDirectories"
-            :key="path"
-            :label="path"
-            :status="enabled ? 'bad' : 'ok'"
-            :details="enabled ? 'Папка показывает список файлов.' : 'Список файлов не раскрывается.'"
-            :fix="enabled ? 'Отключите autoindex/directory listing для этой директории.' : undefined"
-          />
-        </SecurityCard>
+          <div v-if="category.issues.length" class="issue-list">
+            <details
+              v-for="issue in category.issues"
+              :key="issue.title"
+              class="issue-row"
+              :class="`issue-${issue.status}`"
+            >
+              <summary>
+                <span class="issue-title">{{ issue.title }}</span>
+                <span class="issue-badge" :class="issue.status">
+                  {{ statusLabel(issue.status) }}
+                </span>
+              </summary>
+              <p>{{ issue.details }}</p>
+              <div v-if="issue.fix" class="issue-fix">
+                <strong>Как исправить:</strong>
+                <span>{{ issue.fix }}</span>
+              </div>
+            </details>
+          </div>
 
-        <SecurityCard
-          title="Внешние ресурсы"
-          description="Проверяет внешние JS, SRI, security.txt и раскрытие Server/X-Powered-By."
-          :is-expanded="isExpanded('resources')"
-          @toggle-info="onToggle('resources')"
-        >
-          <template #icon>
-            <IconLucideCode2 />
-          </template>
-          <CheckRow
-            label="Внешние JS без SRI"
-            :status="(securityAudit.script_integrity?.without_integrity_count || 0) > 0 ? 'warn' : 'ok'"
-            :details="scriptIntegrityDetails"
-            :fix="(securityAudit.script_integrity?.without_integrity_count || 0) > 0 ? 'Добавьте integrity и crossorigin для CDN-скриптов.' : undefined"
-          />
-          <CheckRow
-            label="Раскрытие сервера"
-            :status="securityAudit.server_exposure?.issues?.length ? 'warn' : 'ok'"
-            :details="serverExposureDetails"
-            :fix="securityAudit.server_exposure?.issues?.length ? 'Скройте X-Powered-By и минимизируйте Server в конфигурации web-сервера.' : undefined"
-          />
-          <CheckRow
-            label="security.txt"
-            :status="securityAudit.security_txt ? 'ok' : 'warn'"
-            :details="securityAudit.security_txt ? 'Файл найден.' : 'Файл не найден. Это не ошибка, но полезно для зрелого процесса безопасности.'"
-            fix="Добавьте /.well-known/security.txt с контактом для сообщений об уязвимостях."
-          />
-          <CheckRow
-            label="robots.txt / sitemap.xml"
-            :status="securityAudit.robots_txt && securityAudit.sitemap_xml ? 'ok' : 'warn'"
-            :details="seoFilesDetails"
-          />
-        </SecurityCard>
+          <div v-else class="panel-ok">
+            {{ category.okText }}
+          </div>
+        </article>
       </div>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, defineComponent, h, PropType } from "vue";
-import SecurityCard from "./SecurityCard.vue";
+import { computed } from "vue";
 import { formatHeaderName } from "@/shared/utils/security";
 import IconLucideLock from "~icons/lucide/lock";
 import IconLucideFileText from "~icons/lucide/file-text";
@@ -236,41 +126,23 @@ const props = defineProps<{
   isExpanded: (_key: string) => boolean;
 }>();
 
-const emit = defineEmits<{
-  toggle: [key: string];
-}>();
-
-const onToggle = (_key: string) => {
-  emit("toggle", _key);
+type CheckStatus = "ok" | "warn" | "bad";
+type SecurityIssue = {
+  title: string;
+  status: CheckStatus;
+  details: string;
+  fix?: string;
 };
 
-type CheckStatus = "ok" | "warn" | "bad";
-
-const CheckRow = defineComponent({
-  name: "CheckRow",
-  props: {
-    label: { type: String, required: true },
-    status: { type: String as PropType<CheckStatus>, required: true },
-    details: { type: String, required: true },
-    fix: { type: String, required: false },
-  },
-  setup(rowProps) {
-    return () =>
-      h("div", { class: ["practical-check", `check-${rowProps.status}`] }, [
-        h("div", { class: "check-main" }, [
-          h("span", { class: "check-title" }, rowProps.label),
-          h("span", { class: ["status-pill", rowProps.status] }, statusLabel(rowProps.status)),
-        ]),
-        h("p", { class: "check-details" }, rowProps.details),
-        rowProps.fix
-          ? h("div", { class: "check-fix" }, [
-              h("span", { class: "fix-label" }, "Как исправить"),
-              h("span", rowProps.fix),
-            ])
-          : null,
-      ]);
-  },
-});
+type SecurityCategory = {
+  key: string;
+  title: string;
+  status: CheckStatus;
+  summary: string;
+  okText: string;
+  meta: string[];
+  issues: SecurityIssue[];
+};
 
 const statusLabel = (status: CheckStatus) => {
   if (status === "ok") return "OK";
@@ -389,16 +261,164 @@ const seoFilesDetails = computed(() => {
   ].filter(Boolean);
   return found.length === 2 ? "Оба файла найдены." : `Найдено: ${found.join(", ") || "ничего"}.`;
 });
+
+const categoryStatus = (issues: SecurityIssue[]): CheckStatus => {
+  if (issues.some((issue) => issue.status === "bad")) return "bad";
+  if (issues.some((issue) => issue.status === "warn")) return "warn";
+  return "ok";
+};
+
+const securityCategories = computed<SecurityCategory[]>(() => {
+  const audit = props.securityAudit;
+  if (!audit) return [];
+
+  const transportIssues: SecurityIssue[] = [
+    !audit.https?.uses_https
+      ? {
+          title: "Сайт открыт без HTTPS",
+          status: "bad",
+          details: "Соединение не шифруется.",
+          fix: "Подключите TLS-сертификат и отдавайте сайт только по HTTPS.",
+        }
+      : null,
+    redirectStatus.value !== "ok"
+      ? {
+          title: "HTTP → HTTPS redirect",
+          status: redirectStatus.value,
+          details: redirectDetails.value,
+          fix: "Настройте 301/308 редирект с http:// на https://.",
+        }
+      : null,
+    (audit.mixed_content?.count || 0) > 0
+      ? {
+          title: "Mixed content",
+          status: "bad",
+          details: mixedContentDetails.value,
+          fix: "Замените все http:// ресурсы на https://.",
+        }
+      : null,
+  ].filter(Boolean) as SecurityIssue[];
+
+  const headerIssueItems: SecurityIssue[] = headerIssues.value.map(([key, check]) => ({
+    title: formatHeaderName(key),
+    status: check.status,
+    details: check.message,
+    fix: check.recommendation,
+  }));
+
+  const cookieIssues: SecurityIssue[] = weakCookies.value.map((cookie) => ({
+    title: cookie.name,
+    status: "bad",
+    details: cookie.issues.join(", "),
+    fix: "Для сессионных cookies включите Secure, HttpOnly и SameSite=Lax/Strict.",
+  }));
+
+  const fileIssues: SecurityIssue[] = leakedFiles.value.map(([path]) => ({
+    title: path,
+    status: "bad",
+    details: "Файл доступен публично. Это может раскрыть секреты или исходный код.",
+    fix: "Закройте доступ к файлу на уровне nginx/apache и проверьте, не утекли ли ключи.",
+  }));
+
+  const listingIssues: SecurityIssue[] = openDirectories.value.map(([path]) => ({
+    title: path,
+    status: "bad",
+    details: "Папка показывает список файлов.",
+    fix: "Отключите autoindex/directory listing для этой директории.",
+  }));
+
+  const resourceIssues: SecurityIssue[] = [
+    (audit.script_integrity?.without_integrity_count || 0) > 0
+      ? {
+          title: "Внешние JS без SRI",
+          status: "warn",
+          details: scriptIntegrityDetails.value,
+          fix: "Для CDN-скриптов добавьте integrity и crossorigin.",
+        }
+      : null,
+    audit.server_exposure?.issues?.length
+      ? {
+          title: "Раскрытие сервера",
+          status: "warn",
+          details: serverExposureDetails.value,
+          fix: "Скройте X-Powered-By и минимизируйте Server в конфигурации web-сервера.",
+        }
+      : null,
+  ].filter(Boolean) as SecurityIssue[];
+
+  return [
+    {
+      key: "transport",
+      title: "HTTPS",
+      status: categoryStatus(transportIssues),
+      summary: transportIssues.length ? `${transportIssues.length} проблем(ы) с транспортом` : "HTTPS и редиректы выглядят нормально",
+      okText: "HTTPS включён, небезопасные ресурсы не найдены.",
+      meta: [
+        audit.https?.uses_https ? "HTTPS включён" : "HTTPS выключен",
+        redirectStatus.value === "ok" ? "HTTP редиректит" : "редирект проверить",
+      ],
+      issues: transportIssues,
+    },
+    {
+      key: "headers",
+      title: "Заголовки",
+      status: categoryStatus(headerIssueItems),
+      summary: headerIssueItems.length ? `Нужно поправить: ${headerIssueItems.length}` : `Проверено ${headersCount.value} заголовков`,
+      okText: "Явных слабых security headers не найдено.",
+      meta: [`проверок: ${headersCount.value}`],
+      issues: headerIssueItems,
+    },
+    {
+      key: "cookies",
+      title: "Cookies",
+      status: categoryStatus(cookieIssues),
+      summary: audit.cookie_flags?.total ? `Cookies: ${audit.cookie_flags.total}, слабых: ${audit.cookie_flags.weak}` : "Set-Cookie не найден",
+      okText: audit.cookie_flags?.total ? "Слабые cookie-флаги не найдены." : "Для сайта без авторизации это нормально.",
+      meta: [`всего: ${audit.cookie_flags?.total || 0}`],
+      issues: cookieIssues,
+    },
+    {
+      key: "files",
+      title: "Файлы",
+      status: categoryStatus(fileIssues),
+      summary: fileIssues.length ? `Найдено утечек: ${fileIssues.length}` : `Проверено ${sensitiveFilesCount.value} опасных путей`,
+      okText: "Публичных утечек файлов не найдено.",
+      meta: [`путей: ${sensitiveFilesCount.value}`],
+      issues: fileIssues,
+    },
+    {
+      key: "listing",
+      title: "Папки",
+      status: categoryStatus(listingIssues),
+      summary: listingIssues.length ? `Открыт listing: ${listingIssues.length}` : `Проверено директорий: ${directoriesCount.value}`,
+      okText: "Публичный список файлов в директориях не найден.",
+      meta: [`директорий: ${directoriesCount.value}`],
+      issues: listingIssues,
+    },
+    {
+      key: "resources",
+      title: "Ресурсы",
+      status: categoryStatus(resourceIssues),
+      summary: resourceIssues.length ? `Есть предупреждения: ${resourceIssues.length}` : "Внешние ресурсы выглядят спокойно",
+      okText: "Критичных проблем с внешними ресурсами не найдено.",
+      meta: [
+        `JS внешних: ${audit.script_integrity?.external_count || 0}`,
+        audit.security_txt ? "security.txt есть" : "security.txt нет",
+        seoFilesDetails.value,
+      ],
+      issues: resourceIssues,
+    },
+  ];
+});
 </script>
 
 <style scoped>
 .security-score-panel,
-.recommendations-panel {
-  background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(30, 30, 50, 0.95) 100%);
+.recommendations-panel,
+.security-panel {
+  background: linear-gradient(135deg, rgba(24, 24, 38, 0.96) 0%, rgba(31, 31, 48, 0.96) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
 }
 
 .security-score-panel {
@@ -406,6 +426,9 @@ const seoFilesDetails = computed(() => {
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
+  border-radius: 22px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .security-score-panel.risk-high {
@@ -422,8 +445,10 @@ const seoFilesDetails = computed(() => {
 
 .score-eyebrow {
   color: rgba(255, 255, 255, 0.55);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .security-score-panel h3 {
@@ -435,73 +460,78 @@ const seoFilesDetails = computed(() => {
 .security-score-panel p {
   color: rgba(255, 255, 255, 0.68);
   margin: 0;
+  line-height: 1.45;
 }
 
 .risk-count {
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
+  min-width: 94px;
+  height: 76px;
+  border-radius: 18px;
   background: rgba(100, 108, 255, 0.14);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 
 .risk-count span {
   color: #fff;
   font-size: 2rem;
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1;
 }
 
 .risk-count small {
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.75rem;
-  text-align: center;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 0.72rem;
 }
 
 .recommendations-panel {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
   gap: 0.75rem;
+  border-radius: 18px;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .recommendation-row {
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
+  grid-template-columns: 20px minmax(0, 1fr);
   gap: 0.75rem;
-  padding: 0.9rem 1rem;
+  padding: 0.85rem;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.045);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  min-width: 0;
 }
 
 .recommendation-row svg {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
   margin-top: 0.1rem;
+}
+
+.recommendation-row strong,
+.recommendation-row p {
+  overflow-wrap: anywhere;
 }
 
 .recommendation-row strong {
   display: block;
   color: #fff;
-  overflow-wrap: anywhere;
+  font-size: 0.92rem;
 }
 
 .recommendation-row p {
-  color: rgba(255, 255, 255, 0.68);
+  color: rgba(255, 255, 255, 0.66);
   margin: 0.25rem 0 0;
+  font-size: 0.86rem;
   line-height: 1.45;
-  overflow-wrap: anywhere;
 }
 
 .severity-critical,
 .severity-high {
-  border-color: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.28);
 }
 
 .severity-critical svg,
@@ -517,148 +547,187 @@ const seoFilesDetails = computed(() => {
   color: #60a5fa;
 }
 
-:deep(.security-grid) {
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
-  align-items: start;
+.security-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: 1rem;
 }
 
-:deep(.security-card) {
+.security-panel {
+  border-radius: 20px;
+  padding: 1.1rem;
   min-width: 0;
-  padding: 1.5rem;
-  border-radius: 22px;
   overflow: hidden;
 }
 
-:deep(.security-card:hover) {
-  transform: translateY(-2px);
+.security-panel.panel-bad {
+  border-color: rgba(239, 68, 68, 0.28);
 }
 
-:deep(.security-items) {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-  gap: 0.75rem;
-  margin-top: 1rem;
+.security-panel.panel-warn {
+  border-color: rgba(245, 158, 11, 0.28);
 }
 
-:deep(.score-header) {
+.security-panel.panel-ok {
+  border-color: rgba(16, 185, 129, 0.18);
+}
+
+.panel-header {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: 0.8rem;
+  align-items: start;
 }
 
-:deep(.score-header h3) {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-size: 1.15rem;
-}
-
-:deep(.score-icon.security) {
+.panel-icon {
   width: 44px;
   height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(100, 108, 255, 0.14);
+  color: #b9bdff;
 }
 
-:deep(.info-description) {
-  overflow-wrap: anywhere;
+.panel-icon svg {
+  width: 22px;
+  height: 22px;
 }
 
-.practical-check {
-  padding: 1rem;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-left: 3px solid rgba(255, 255, 255, 0.1);
-  min-width: 0;
-  overflow: hidden;
-  min-height: 100%;
-}
-
-.practical-check + .practical-check {
-  margin-top: 0;
-}
-
-.practical-check.check-ok {
-  border-left-color: #10b981;
-}
-
-.practical-check.check-warn {
-  border-left-color: #f59e0b;
-}
-
-.practical-check.check-bad {
-  border-left-color: #ef4444;
-}
-
-.check-main {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-  gap: 0.75rem;
+.panel-title {
   min-width: 0;
 }
 
-.check-title {
+.panel-title h3 {
   color: #fff;
-  font-size: 0.95rem;
-  font-weight: 700;
-  min-width: 0;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  line-height: 1.35;
+  font-size: 1.08rem;
+  line-height: 1.25;
+  margin: 0 0 0.3rem;
 }
 
-.status-pill {
-  flex-shrink: 0;
-  padding: 0.24rem 0.6rem;
+.panel-title p {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.86rem;
+  line-height: 1.4;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.panel-status,
+.issue-badge {
+  padding: 0.25rem 0.58rem;
   border-radius: 999px;
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: 0.67rem;
+  font-weight: 800;
+  line-height: 1.1;
   white-space: nowrap;
 }
 
-.status-pill.ok {
+.panel-status.ok,
+.issue-badge.ok {
   background: rgba(16, 185, 129, 0.14);
   color: #10b981;
 }
 
-.status-pill.warn {
+.panel-status.warn,
+.issue-badge.warn {
   background: rgba(245, 158, 11, 0.14);
   color: #f59e0b;
 }
 
-.status-pill.bad {
+.panel-status.bad,
+.issue-badge.bad {
   background: rgba(239, 68, 68, 0.14);
   color: #ef4444;
 }
 
-.check-details,
-.check-fix,
-.empty-check {
-  margin: 0.45rem 0 0;
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 0.86rem;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+.panel-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.9rem;
 }
 
-.check-fix {
+.panel-meta span {
+  max-width: 100%;
+  padding: 0.32rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.panel-ok {
+  margin-top: 1rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(16, 185, 129, 0.08);
+  color: rgba(214, 255, 235, 0.88);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.issue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.issue-row {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.issue-row[open] {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.issue-row summary {
+  list-style: none;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.78rem 0.85rem;
+}
+
+.issue-row summary::-webkit-details-marker {
+  display: none;
+}
+
+.issue-title {
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.issue-row p,
+.issue-fix {
+  margin: 0;
+  padding: 0 0.85rem 0.8rem;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.issue-fix {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  color: rgba(255, 255, 255, 0.86);
-  background: rgba(100, 108, 255, 0.08);
-  border: 1px solid rgba(100, 108, 255, 0.12);
-  border-radius: 10px;
-  padding: 0.65rem 0.75rem;
+  color: rgba(255, 255, 255, 0.82);
 }
 
-.fix-label {
+.issue-fix strong {
   color: #b9bdff;
   font-size: 0.72rem;
-  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -666,28 +735,19 @@ const seoFilesDetails = computed(() => {
 @media (max-width: 768px) {
   .security-score-panel {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
   }
 
-  :deep(.security-grid) {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .risk-count {
+    width: 100%;
   }
 
-  :deep(.security-card) {
-    padding: 1rem;
+  .panel-header {
+    grid-template-columns: 40px minmax(0, 1fr);
   }
 
-  :deep(.score-header) {
-    grid-template-columns: 40px minmax(0, 1fr) auto;
-  }
-
-  .check-main {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-  }
-
-  .status-pill {
+  .panel-status {
+    grid-column: 2;
     width: fit-content;
   }
 }
